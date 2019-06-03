@@ -1,0 +1,3 @@
+# estimated ML point
+# max(-logpost) fsigma8 bsigma8 sigma_v alpha=1.0 eps beta a_perp a_par
+1224.9328 0.4125 1.0262 354.9907 1.0000 0.9979 0.4020 0.9993 1.0014
