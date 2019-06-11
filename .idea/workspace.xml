@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="71cc002b-9191-4b99-ae19-3e61ccabf90b" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/void-cosmo-fitter.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/void-cosmo-fitter.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/posterior_samplers/CMASS_DR12.py" beforeDir="false" afterPath="$PROJECT_DIR$/posterior_samplers/CMASS_DR12.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -39,8 +39,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/posterior_samplers/CMASS_DR12.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="364">
-              <caret line="497" column="16" selection-start-line="497" selection-start-column="16" selection-end-line="497" selection-end-column="16" />
+            <state relative-caret-position="859">
+              <caret line="481" column="11" lean-forward="true" selection-start-line="481" selection-start-column="11" selection-end-line="481" selection-end-column="11" />
               <folding>
                 <element signature="e#0#37#0" expanded="true" />
               </folding>
@@ -153,7 +153,6 @@
         <option value="$PROJECT_DIR$/voidgalaxy_samplers/CMASS_DR12.py" />
         <option value="$PROJECT_DIR$/posterior_samplers/test.py" />
         <option value="$PROJECT_DIR$/posterior_samplers/minerva_convert.f90" />
-        <option value="$PROJECT_DIR$/posterior_samplers/CMASS_DR12.py" />
         <option value="$PROJECT_DIR$/posterior_samplers/Patchy_CMASS_DR12.py" />
         <option value="$PROJECT_DIR$/run_Patchy_mcmc.py" />
         <option value="$PROJECT_DIR$/run_mcmc.py" />
@@ -162,6 +161,7 @@
         <option value="$PROJECT_DIR$/camb_chain_retrofitter.py" />
         <option value="$PROJECT_DIR$/README.md" />
         <option value="$PROJECT_DIR$/.gitignore" />
+        <option value="$PROJECT_DIR$/posterior_samplers/CMASS_DR12.py" />
       </list>
     </option>
   </component>
@@ -379,8 +379,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/posterior_samplers/CMASS_DR12.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="364">
-          <caret line="497" column="16" selection-start-line="497" selection-start-column="16" selection-end-line="497" selection-end-column="16" />
+        <state relative-caret-position="859">
+          <caret line="481" column="11" lean-forward="true" selection-start-line="481" selection-start-column="11" selection-end-line="481" selection-end-column="11" />
           <folding>
             <element signature="e#0#37#0" expanded="true" />
           </folding>
