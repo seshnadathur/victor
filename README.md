@@ -1,4 +1,4 @@
-# VICTOR
+# Victor
 
 General Python code for likelihood analysis of void-galaxy cross-correlation data
 
