@@ -81,7 +81,7 @@ class CMASSPosterior:
         # read in the CMASS multipole data on the grid
         self.f_grid, self.r_for_xi, multipoles = np.load(self.data_directory +
                                                          'CMASS_combined_Zobov_pVoids_Rcut_multipoles_Rs%0.1f.npy'
-                                                         % smooth, allow_pickle=True)
+                                                         % smooth, allow_pickle=True, encoding='latin1')
         self.s_multipoles = multipoles[0]
         self.p_multipoles = multipoles[1]
         if mono_from_mocks:
@@ -92,18 +92,18 @@ class CMASSPosterior:
             # chi-squared, see Nadathur et al. arXiv:1904.01030)
             f_grid, r_for_xi, multipoles = np.load(self.data_directory +
                                                    'Patchy_CMASS_mean_combined_Zobov_pVoids_Rcut_multipoles_Rs10.0.npy',
-                                                   allow_pickle=True)
+                                                   allow_pickle=True, encoding='latin1')
             self.p_multipoles = multipoles[1]
 
         # read the data covariance matrix computed from mocks
         self.fixed_covmat = fixed_covmat
         if self.fixed_covmat:
             self.covmat = np.load(self.data_directory + 'CMASS_combined_Zobov_pVoids_Rcut_x_sGals_covmat.npy',
-                                  allow_pickle=True)
+                                  allow_pickle=True, encoding='latin1')
             self.nmocks = 2048  # sorry, hard-coded
         else:
             self.covmat = np.load(self.data_directory + 'CMASS_combined_Zobov_pVoids_Rcut_x_sGals_grid_covmat.npy',
-                                  allow_pickle=True)
+                                  allow_pickle=True, encoding='latin1')
             if not len(self.f_grid) == self.covmat.shape[0]:
                 sys.exit('Shape mismatch between grid in f and covariance matrix for interpolation\n' +
                          'Stopping here; check files.')
@@ -378,7 +378,7 @@ class CMASSPosterior:
         # calculate the chi-squared value
         if self.fixed_covmat:
             if self.quad_only:
-                chisq = np.dot(np.dot(theory[self.r_length:] - data_s_multipoles[self.r_length:], self.iqcov), 
+                chisq = np.dot(np.dot(theory[self.r_length:] - data_s_multipoles[self.r_length:], self.iqcov),
                                theory[self.r_length:] - data_s_multipoles[self.r_length:])
             elif self.mono_only:
                 chisq = np.dot(np.dot(theory[:self.r_length] - data_s_multipoles[:self.r_length], self.imcov),

@@ -1,5 +1,11 @@
-run_Patchy_mcmc.py
-camb_chain_retrofitter.py
-.ipynb_checkpoints
-BOSS_DR12_CMASS_data/maxLikelihood/Patchy*.txt
-BOSS_DR12_CMASS_data/maxLikelihood/Patchy_CMASS_all_ML_SH_mockmono_varycov_r120.0.npy
+run_mcmc.py
+posterior_samplers/__pycache__/
+posterior_samplers/Patchy_CMASS_DR12.py*
+posterior_samplers/CMASS_DR12.py*
+parameters/__pycache__/
+.ipynb_checkpoints/
+chains/*
+md-box_data/
+old_BOSS_DR12_CMASS_data/
+parameters/md-box*
+utilities/__pycache__/
