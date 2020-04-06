@@ -13,8 +13,8 @@ General Python code for likelihood analysis of void-galaxy cross-correlation dat
 1. Create an input parameter file (see the example provided in [parameters/generic_likelihood_params.py]()) 
 to point to the data files you want to fit and set modelling options (note the special format required for 
 data files!)
-2. To run an MCMC posterior sampler using ```emcee```, do  ```python run_sampler.py --param_file 
-<path/to/input/parameter/file>``` 
+2. To run an MCMC posterior sampler using ```emcee```, do 
+```python run_sampler.py --param_file <path/to/input/parameter/file>``` 
  
 For subsequent runs if you wish to create additional chains, use the ```-c N``` argument to specify integer 
 argument N to be appended to the end of subsequent chains (if ```-c``` is not specified, it defaults to 1)
