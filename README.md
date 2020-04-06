@@ -7,7 +7,6 @@ General Python code for likelihood analysis of void-galaxy cross-correlation dat
    - ```numpy``` 
    - ```scipy``` 
    - [```emcee```](https://emcee.readthedocs.io/en/stable/) (for MCMC sampling)
-   - [```getdist```](https://getdist.readthedocs.io/en/latest/) (for MCMC sampling)
 
 ### Quickstart usage:
 1. Create an input parameter file (see the example provided in [parameters/generic_likelihood_params.py]()) 
