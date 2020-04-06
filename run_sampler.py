@@ -2,11 +2,9 @@ import os
 import sys
 import argparse
 import numpy as np
-import zeus
 import emcee
 import importlib.util
 from multiprocessing import Pool, cpu_count
-from getdist import MCSamples
 from posterior_samplers.void_galaxy_posterior import VoidGalaxyPosterior
 from utilities.utilities import UtilMethods
 
@@ -15,7 +13,6 @@ parser = argparse.ArgumentParser(description='Run an MCMC sampling of the poster
                                              'to the void-galaxy cross-correlation function')
 parser.add_argument('-p', '--param_file', type=str, help='filename for parameter specification file')
 parser.add_argument('-c', dest='chain', default=1, type=int, help='chain number (default =1)')
-parser.add_argument('-s', dest='sampler', default='zeus', type=str, help="sampler to use ('zeus' or 'emcee')")
 args = parser.parse_args()
 
 spec = importlib.util.spec_from_file_location("name", args.param_file)
@@ -29,9 +26,11 @@ if not os.access(params.output_folder, os.F_OK):
 # initialize the fitter
 void_gal_fitter = VoidGalaxyPosterior(params)
 
+
 # define a global log posterior function to be called by the MCMC sampler
 def lnpost_global(theta):
     return void_gal_fitter.lnpost(theta)
+
 
 nsteps, nwalkers, ndim, burnin = 1000, 20, int(void_gal_fitter.ndim), 50
 if ndim == 4:
@@ -65,53 +64,42 @@ ncpu = cpu_count()
 print("Using {0} CPUs".format(ncpu))
 
 with Pool() as pool:
-    if args.sampler == 'zeus':
-        sampler = zeus.sampler(lnpost_global, nwalkers, ndim, pool=pool)
-        sampler.run(start, nsteps)
-        trace = sampler.flatten(burn=burnin)
-        samples = MCSamples(samples=trace, names=names, labels=labels, ranges=ranges)
-        if ndim == 4:
-            samples.addDerived(trace[:, 0] / trace[:, 1], name='beta', label=r'\beta', range=void_gal_fitter.beta_prior_range)
-        rootname = os.path.join(params.output_folder, params.root)
-        samples.saveAsText(rootname + '_%d' % args.chain)
-        sampler.summary
-    elif args.sampler == 'emcee':
-        sampler = emcee.EnsembleSampler(nwalkers, ndim, lnpost_global, pool=pool)
-        state = sampler.run_mcmc(start, burnin, progress=True, thin_by=5)
-        print("Done the burn-in, starting production run")
-        sys.stdout.flush()
-        sampler.reset()
-        # the backend function in emcee gives lots of problems, so save to file by hand
-        icount = 0
-        continue_run = True
-        while continue_run:
-            state = sampler.run_mcmc(state, nsteps, progress=True, thin_by=5)
-            part_chain = sampler.flatchain
-            lnprob = sampler.get_log_prob().flatten()
-            output = np.ones((part_chain.shape[0], part_chain.shape[1] + 2))
-            output[:, 1] = lnprob
-            output[:, 2:] = part_chain
-            if icount == 0:
-                full_chain = output
-            else:
-                full_chain = np.load(rootname + '_%d.npy' % args.chain)
-                full_chain = np.vstack([full_chain, output])
-            np.save(rootname + '_%d.npy' % args.chain, full_chain)
-            icount += 1
-            ntotal = icount * nsteps
+    sampler = emcee.EnsembleSampler(nwalkers, ndim, lnpost_global, pool=pool)
+    state = sampler.run_mcmc(start, burnin, progress=True, thin_by=5)
+    print("Done the burn-in, starting production run")
+    sys.stdout.flush()
+    sampler.reset()
+    # the backend function in emcee gives lots of problems, so save to file by hand
+    icount = 0
+    continue_run = True
+    while continue_run:
+        state = sampler.run_mcmc(state, nsteps, progress=True, thin_by=5)
+        part_chain = sampler.flatchain
+        lnprob = sampler.get_log_prob().flatten()
+        output = np.ones((part_chain.shape[0], part_chain.shape[1] + 2))
+        output[:, 1] = lnprob
+        output[:, 2:] = part_chain
+        if icount == 0:
+            full_chain = output
+        else:
+            full_chain = np.load(rootname + '_%d.npy' % args.chain)
+            full_chain = np.vstack([full_chain, output])
+        np.save(rootname + '_%d.npy' % args.chain, full_chain)
+        icount += 1
+        ntotal = icount * nsteps
 
-            # now estimate the autocorrelation time
-            full_chain = full_chain[:, 2:].reshape((int(full_chain.shape[0] / nwalkers), int(nwalkers), int(ndim)))
-            print("After %d steps, autocorrelation times for parameters:" % ntotal)
-            acor = np.empty(ndim)
-            for i in range(acor.shape[0]):
-                acor[i] = UtilMethods.autocorrelation(full_chain[:, :, i].T)
-                print("\t %s: %0.3f" % (names[i], acor[i]))
-            sys.stdout.flush()
-            if nwalkers * ntotal > 200 * np.max(acor):
-                # chain is long enough for convergence in each parameter
-                print('Chain converged, stopping')
-                continue_run = False
-            else:
-                print('Chain not yet converged, continuing')
-            sys.stdout.flush()
+        # now estimate the autocorrelation time
+        full_chain = full_chain[:, 2:].reshape((int(full_chain.shape[0] / nwalkers), int(nwalkers), int(ndim)))
+        print("After %d steps, autocorrelation times for parameters:" % ntotal)
+        acor = np.empty(ndim)
+        for i in range(acor.shape[0]):
+            acor[i] = UtilMethods.autocorrelation(full_chain[:, :, i].T)
+            print("\t %s: %0.3f" % (names[i], acor[i]))
+        sys.stdout.flush()
+        if nwalkers * ntotal > 200 * np.max(acor):
+            # chain is long enough for convergence in each parameter
+            print('Chain converged, stopping')
+            continue_run = False
+        else:
+            print('Chain not yet converged, continuing')
+        sys.stdout.flush()

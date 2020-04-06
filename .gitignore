@@ -1,4 +1,5 @@
 run_mcmc.py
+run_sampler_zeus.py
 posterior_samplers/__pycache__/
 posterior_samplers/Patchy_CMASS_DR12.py*
 posterior_samplers/CMASS_DR12.py*
