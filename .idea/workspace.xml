@@ -3,16 +3,13 @@
   <component name="ChangeListManager">
     <list default="true" id="71cc002b-9191-4b99-ae19-3e61ccabf90b" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/void-cosmo-fitter.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/void-cosmo-fitter.ipynb" afterDir="false" />
     </list>
-    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
-  </component>
-  <component name="FileEditorManager">
-    <leaf />
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
@@ -69,94 +66,22 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="IdeDocumentHistory">
-    <option name="CHANGED_PATHS">
-      <list>
-        <option value="$PROJECT_DIR$/samplers/step.py" />
-        <option value="$PROJECT_DIR$/samplers/__init__.py" />
-        <option value="$PROJECT_DIR$/samplers/CMASS_DR12_void-gal_post_sampler.py" />
-        <option value="$PROJECT_DIR$/voidgalaxy_samplers/step.py" />
-        <option value="$PROJECT_DIR$/../DR12_voidRSD_MCMC.py" />
-        <option value="$PROJECT_DIR$/voidgalaxy_samplers/utilities.py" />
-        <option value="$PROJECT_DIR$/voidgalaxy_samplers/CMASS_DR12.py" />
-        <option value="$PROJECT_DIR$/posterior_samplers/test.py" />
-        <option value="$PROJECT_DIR$/posterior_samplers/minerva_convert.f90" />
-        <option value="$PROJECT_DIR$/posterior_samplers/Patchy_CMASS_DR12.py" />
-        <option value="$PROJECT_DIR$/run_Patchy_mcmc.py" />
-        <option value="$PROJECT_DIR$/run_mcmc.py" />
-        <option value="$PROJECT_DIR$/__init__.py" />
-        <option value="$PROJECT_DIR$/utilities/utilities.py" />
-        <option value="$PROJECT_DIR$/camb_chain_retrofitter.py" />
-        <option value="$PROJECT_DIR$/README.md" />
-        <option value="$PROJECT_DIR$/.gitignore" />
-        <option value="$PROJECT_DIR$/posterior_samplers/CMASS_DR12.py" />
-        <option value="$PROJECT_DIR$/posterior_samplers/match_flagship.py" />
-        <option value="$PROJECT_DIR$/match_flagship.py" />
-      </list>
-    </option>
-  </component>
   <component name="ProjectFrameBounds" extendedState="6">
     <option name="y" value="23" />
     <option name="width" value="1280" />
     <option name="height" value="697" />
   </component>
+  <component name="ProjectId" id="1aAtTFHoxDrhL9hidzChqXb2vQl" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
-  <component name="ProjectView">
-    <navigator proportions="" version="1">
-      <foldersAlwaysOnTop value="true" />
-    </navigator>
-    <panes>
-      <pane id="ProjectPane">
-        <subPane>
-          <expand>
-            <path>
-              <item name="void-galaxy-cosmo-fitter" type="b2602c69:ProjectViewProjectNode" />
-              <item name="void-galaxy-cosmo-fitter" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="void-galaxy-cosmo-fitter" type="b2602c69:ProjectViewProjectNode" />
-              <item name="void-galaxy-cosmo-fitter" type="462c0819:PsiDirectoryNode" />
-              <item name="BOSS_DR12_CMASS_data" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="void-galaxy-cosmo-fitter" type="b2602c69:ProjectViewProjectNode" />
-              <item name="void-galaxy-cosmo-fitter" type="462c0819:PsiDirectoryNode" />
-              <item name="BOSS_DR12_CMASS_data" type="462c0819:PsiDirectoryNode" />
-              <item name="maxLikelihood" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="void-galaxy-cosmo-fitter" type="b2602c69:ProjectViewProjectNode" />
-              <item name="void-galaxy-cosmo-fitter" type="462c0819:PsiDirectoryNode" />
-              <item name="BOSS_DR12_CMASS_data" type="462c0819:PsiDirectoryNode" />
-              <item name="MCMC_chains" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="void-galaxy-cosmo-fitter" type="b2602c69:ProjectViewProjectNode" />
-              <item name="void-galaxy-cosmo-fitter" type="462c0819:PsiDirectoryNode" />
-              <item name="posterior_samplers" type="462c0819:PsiDirectoryNode" />
-            </path>
-          </expand>
-          <select />
-        </subPane>
-      </pane>
-      <pane id="Scope" />
-    </panes>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showExcludedFiles" value="true" />
+    <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent">
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="settings.editor.selected.configurable" value="project.propVCSSupport.Mappings" />
-  </component>
-  <component name="RunDashboard">
-    <option name="ruleStates">
-      <list>
-        <RuleState>
-          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
-        </RuleState>
-        <RuleState>
-          <option name="name" value="StatusDashboardGroupingRule" />
-        </RuleState>
-      </list>
-    </option>
   </component>
   <component name="SvnConfiguration">
     <configuration />
@@ -170,161 +95,5 @@
       <updated>1557928278575</updated>
     </task>
     <servers />
-  </component>
-  <component name="ToolWindowManager">
-    <frame x="477" y="126" width="1440" height="1226" extended-state="0" />
-    <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.16842847" />
-      <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
-      <window_info id="Favorites" order="2" side_tool="true" />
-      <window_info anchor="bottom" id="Message" order="0" />
-      <window_info anchor="bottom" id="Find" order="1" />
-      <window_info anchor="bottom" id="Run" order="2" />
-      <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
-      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
-      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
-      <window_info anchor="bottom" id="TODO" order="6" />
-      <window_info anchor="bottom" id="Version Control" order="7" />
-      <window_info anchor="bottom" id="Terminal" order="8" />
-      <window_info anchor="bottom" id="Event Log" order="9" side_tool="true" weight="0.6595041" />
-      <window_info anchor="bottom" id="Python Console" order="10" />
-      <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
-      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
-      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
-    </layout>
-  </component>
-  <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/CMASS_DR12_void-gal_post_sampler.py" />
-    <entry file="file://$PROJECT_DIR$/samplers/step.py" />
-    <entry file="file://$PROJECT_DIR$/samplers/__init__.py" />
-    <entry file="file://$PROJECT_DIR$/samplers/CMASS_DR12_void-gal_post_sampler.py" />
-    <entry file="file://$PROJECT_DIR$/voidgalaxy_samplers/step.py" />
-    <entry file="file://$PROJECT_DIR$/voidgalaxy_samplers/CMASS_DR12.py" />
-    <entry file="file://$PROJECT_DIR$/voidgalaxy_samplers/utilities.py" />
-    <entry file="file://$PROJECT_DIR$/../DR12_voidRSD_MCMC.py" />
-    <entry file="file://$PROJECT_DIR$/posterior_samplers/test.py" />
-    <entry file="file://$PROJECT_DIR$/posterior_samplers/utilities.py" />
-    <entry file="file://$PROJECT_DIR$/utilities/figure_tools.py" />
-    <entry file="file://$PROJECT_DIR$/../REVOLVER/python_tools/cosmology.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="420">
-          <caret line="28" lean-forward="true" selection-start-line="4" selection-end-line="28" />
-          <folding>
-            <element signature="e#0#18#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/posterior_samplers/__init__.py">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$USER_HOME$/anaconda/lib/python2.7/site-packages/corner/corner.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-3990">
-          <caret line="19" column="13" selection-start-line="19" selection-start-column="11" selection-end-line="19" selection-end-column="13" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../Python/DR12_voidRSD_MCMC.py" />
-    <entry file="file://$PROJECT_DIR$/posterior_samplers/minerva_convert.f90" />
-    <entry file="file://$PROJECT_DIR$/../Python/Patchy_voidRSD_MCMC.py" />
-    <entry file="file://$PROJECT_DIR$/__init__.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="15">
-          <caret line="1" lean-forward="true" selection-start-line="1" selection-end-line="1" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/LICENSE">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/posterior_samplers/Patchy_CMASS_DR12.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1215">
-          <caret line="90" column="55" selection-start-line="90" selection-start-column="55" selection-end-line="90" selection-end-column="55" />
-          <folding>
-            <element signature="e#0#37#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/utilities/utilities.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1350">
-          <caret line="97" selection-start-line="97" selection-end-line="97" />
-          <folding>
-            <element signature="e#0#18#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/README.md">
-      <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
-        <state split_layout="SPLIT">
-          <first_editor relative-caret-position="270">
-            <caret line="18" column="1" selection-start-line="18" selection-start-column="1" selection-end-line="18" selection-end-column="1" />
-          </first_editor>
-          <second_editor />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/camb_chain_retrofitter.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="29">
-          <caret line="4" selection-start-line="4" selection-end-line="4" />
-          <folding>
-            <element signature="e#0#18#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/.gitignore">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="60">
-          <caret line="4" column="74" selection-start-line="4" selection-start-column="74" selection-end-line="4" selection-end-column="74" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/posterior_samplers/match_flagship.py" />
-    <entry file="file://$PROJECT_DIR$/run_mcmc.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="315">
-          <caret line="29" column="26" selection-start-line="29" selection-end-line="29" selection-end-column="26" />
-          <folding>
-            <element signature="e#0#37#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/run_Patchy_mcmc.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="435">
-          <caret line="37" column="35" selection-start-line="37" selection-start-column="35" selection-end-line="37" selection-end-column="35" />
-          <folding>
-            <element signature="e#0#37#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/posterior_samplers/CMASS_DR12.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="6735">
-          <caret line="458" column="25" selection-start-line="458" selection-start-column="25" selection-end-line="458" selection-end-column="25" />
-          <folding>
-            <element signature="e#0#37#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/match_flagship.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="418">
-          <caret line="56" column="26" lean-forward="true" selection-start-line="56" selection-start-column="26" selection-end-line="56" selection-end-column="26" />
-          <folding>
-            <element signature="e#0#37#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
   </component>
 </project>

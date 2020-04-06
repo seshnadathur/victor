@@ -1,36 +1,67 @@
-# void-galaxy-cosmo-fitter
-General Python code for likelihood analysis and MCMC posterior sampling of measured 
-void-galaxy cross-correlation data post-reconstruction, including data for BOSS 
-DR12 CMASS.
+# VICTOR
 
-##### The code is modular and can be used in different ways: 
- - Classes defined in posterior_samplers/ provide likelihood modules for different 
- data samples, currently limited to BOSS DR12 data and simulations. These can be 
- imported and analysed individually: see the provided notebook 
- **void-cosmo-fitter.ipynb** for an example that reproduces the main analysis and 
- figures from *Beyond BAO: improving cosmological constraints from BOSS with 
- measurement of the void-galaxy cross-correlation*, **S. Nadathur** et al., 2019 
- (https://arxiv.org/abs/1904.01030) for BOSS DR12 CMASS data, for which data and 
- MCMC chains are provided
- - To rerun your own MCMC chains for BOSS DR12 data, use **run_mcmc.py**. To see 
- usage options, do 
- 
-    > python run_mcmc.py --help
- 
- - **run_mcmc.py** can be easily edited to incorporate additional datasets and/or
- new likelihood modules
- 
-##### Requirements:
+General Python code for likelihood analysis of void-galaxy cross-correlation data
 
-void-cosmo-fitter.ipynb requires:
- - scipy
- - matplotlib
- - GetDist (https://getdist.readthedocs.io/en/latest/)
- - astropy (https://www.astropy.org/) (optional)
- - corner (https://github.com/dfm/corner.py) (optional)
+### Requirements
+   - python version 3.7 or higher 
+   - ```numpy``` 
+   - ```scipy``` 
+   - [```emcee```](https://emcee.readthedocs.io/en/stable/) (for MCMC sampling)
+   - [```getdist```](https://getdist.readthedocs.io/en/latest/) (for MCMC sampling)
+
+### Quickstart usage:
+1. Create an input parameter file (see the example provided in [parameters/generic_likelihood_params.py]()) 
+to point to the data files you want to fit and set modelling options (note the special format required for 
+data files!)
+2. To run an MCMC posterior sampler using ```emcee```, do  ```python run_sampler.py --param_file 
+<path/to/input/parameter/file>``` 
  
-run_mcmc.py requires:
- - scipy
- - emcee v2.2.1 (https://emcee.readthedocs.io/en/v2.2.1/user/install/) (we use the 
- older version of emcee for now to maintain compatibility with Python2.7, this 
- will be updated in the future)
+For subsequent runs if you wish to create additional chains, use the ```-c N``` argument to specify integer 
+argument N to be appended to the end of subsequent chains (if ```-c``` is not specified, it defaults to 1)
+
+### Modular usage:
+The code can also be used in modular fashion, e.g. for plotting theory models or data multipoles, calculating 
+chi-squared values, etc. To do this, do
+
+```from posterior_samplers.void_galaxy_posterior import VoidGalaxyPosterior```
+
+and initialise an instance of class ```VoidGalaxyPosterior``` by passing it the input options from your 
+parameter file (see the simple code in [run_sampler.py](run_sampler.py) for an example of how to do this, I 
+will eventually include a Jupyter notebook with demos). 
+
+### Multiprocessing:
+[run_sampler.py](run_sampler.py) uses the ```multiprocessing``` package to automatically use all available
+CPU cores to run the MCMC sampling. 
+
+### Theoretical models implemented:
+Three different theory models are coded, and the choice of model is specified in the input parameter file.
+
+**Model 1:** 
+The dispersion model of Nadathur & Percival (2019) (https://arxiv.org/abs/1712.07575) including 
+generalisations implemented in S. Nadathur *et al.* 2019 (https://arxiv.org/abs/1904.01030). Setting the 
+velocity dispersion to a constant and very small value (~10 km/s) is sufficient to recover the basic 
+Kaiser model of Nadathur & Percival (2019).
+
+**Model 2:**
+The "quasi-linear" model of Cai *et al.* (2016) (https://arxiv.org/abs/1603.05184), which is based on 
+extending the Gaussian Streaming Model for the galaxy autocorrelation in redshift space to the void-galaxy
+cross-correlation by analogy.
+
+**Model 3:**
+The linear "multipole ratio" model of Cai *et al.* (2016) (https://arxiv.org/abs/1603.05184), also applied by 
+Hamaus *et al.* (2017) (https://arxiv.org/abs/1705.05328).
+
+Additional options for models 1 and 2 (e.g., whether to assume linear galaxy bias within voids, and the form 
+of the velocity dispersion function) can also be specified in the input parameter file. Note that the three 
+models produce **very** different predictions: their relative merits and comparisons to simulation results 
+are described in Nadathur & Percival (2019).
+
+### BOSS DR12 CMASS data:
+The file [parameters/boss_cmass_params.py]() provides the appropriate input options to reproduce the fits to 
+the void-galaxy measurements in the BOSS DR12 CMASS sample described in S. Nadathur *et al.* 2019 
+(https://arxiv.org/abs/1904.01030). The required data files are provided in the folder 
+[BOSS_DR12_CMASS_data/]().
+
+### Why is code called Victor?
+Why not? Originally Victor was an acronym for VoId-galaxy CorrelaTion cosmolOgy fitteR (generated using 
+[```acronym```](https://github.com/bacook17/acronym), of course). But now it is just Victor.
