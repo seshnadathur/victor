@@ -53,8 +53,15 @@ void-galaxy cross-correlation by analogy.
 **Model 3:**
 The linear "multipole ratio" model of Cai *et al.* (2016).
 
-Additional options for models 1 and 2 (e.g., whether to assume linear galaxy bias within voids, and the form 
-of the velocity dispersion function) can also be specified in the input parameter file. 
+Additional options for models **1** and **2** (e.g., whether to assume linear galaxy bias within voids, and the 
+form of the velocity dispersion function) can also be specified in the input parameter file. 
+
+Note that all three theory models assume that the cross-correlation of voids with *real-space* galaxy 
+positions is isotropic, which only holds if voids are identified using the real-space galaxy 
+distribution, or after reconstruction applied to the redshift-space distribution as described by Nadathur, 
+Carter & Percival 2019 ([arXiv:1805.09349](https://arxiv.org/abs/1805.09349)) – this can be achieved using the
+[```Revolver```](https://github.com/seshnadathur/Revolver) code. You can of course use ```Victor``` to try to 
+fit measurements obtained from redshift-space voids, but the accuracy of results may suffer.
 
 ### BOSS DR12 CMASS data:
 The file [parameters/boss_cmass_params.py]() provides the appropriate input options to reproduce the fits to 
