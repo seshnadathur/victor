@@ -16,8 +16,9 @@ data files!)
 2. To run an MCMC posterior sampler using ```emcee```, do 
 ```python run_sampler.py --param_file <path/to/input/parameter/file>``` 
  
-For subsequent runs if you wish to create additional chains, use the ```-c N``` argument to specify integer 
-argument N to be appended to the end of subsequent chains (if ```-c``` is not specified, it defaults to 1)
+For subsequent runs if you wish to create additional chains, use the ```-c <N>``` argument to specify integer 
+argument N to be appended to the end of subsequent chains (if option ```-c``` is not specified, it defaults 
+to 1).
 
 ### Modular usage:
 The code can also be used in modular fashion, e.g. for plotting theory models or data multipoles, calculating 
@@ -34,34 +35,35 @@ will eventually include a Jupyter notebook with demos).
 CPU cores to run the MCMC sampling. 
 
 ### Theoretical models implemented:
-Three different theory models are coded, and the choice of model is specified in the input parameter file.
+Three different theory models are coded, and the choice of model is specified in the input parameter file. 
+Note that the three models produce **very** different predictions: their relative merits and comparisons to 
+simulation results are described in [arXiv:1712.07575](https://arxiv.org/abs/1712.07575).
 
 **Model 1:** 
-The dispersion model of Nadathur & Percival (2019) (https://arxiv.org/abs/1712.07575) including 
-generalisations implemented in S. Nadathur *et al.* 2019 (https://arxiv.org/abs/1904.01030). Setting the 
-velocity dispersion to a constant and very small value (~10 km/s) is sufficient to recover the basic 
-Kaiser model of Nadathur & Percival (2019).
+The dispersion model of Nadathur *et al.* 2019 ([arXiv:1904.01030](https://arxiv.org/abs/1904.01030)) that 
+correctly includes all linear-order terms. Setting the velocity dispersion to a constant and very small value 
+(~10 km/s) is sufficient to recover the basic (Kaiser) model of Nadathur & Percival
+([arXiv:1712.07575](https://arxiv.org/abs/1712.07575)).
 
 **Model 2:**
-The "quasi-linear" model of Cai *et al.* (2016) (https://arxiv.org/abs/1603.05184), which is based on 
-extending the Gaussian Streaming Model for the galaxy autocorrelation in redshift space to the void-galaxy
-cross-correlation by analogy.
+The "quasi-linear" model of Cai *et al.* 2016 ([arXiv:1603.05184](https://arxiv.org/abs/1603.05184)). This is
+based on applying the Gaussian Streaming Model for the galaxy autocorrelation in redshift space to the 
+void-galaxy cross-correlation by analogy.
 
 **Model 3:**
-The linear "multipole ratio" model of Cai *et al.* (2016) (https://arxiv.org/abs/1603.05184), also applied by 
-Hamaus *et al.* (2017) (https://arxiv.org/abs/1705.05328).
+The linear "multipole ratio" model of Cai *et al.* (2016).
 
 Additional options for models 1 and 2 (e.g., whether to assume linear galaxy bias within voids, and the form 
-of the velocity dispersion function) can also be specified in the input parameter file. Note that the three 
-models produce **very** different predictions: their relative merits and comparisons to simulation results 
-are described in Nadathur & Percival (2019).
+of the velocity dispersion function) can also be specified in the input parameter file. 
 
 ### BOSS DR12 CMASS data:
 The file [parameters/boss_cmass_params.py]() provides the appropriate input options to reproduce the fits to 
-the void-galaxy measurements in the BOSS DR12 CMASS sample described in S. Nadathur *et al.* 2019 
+the void-galaxy measurements in the BOSS DR12 CMASS sample described in Nadathur *et al.* 2019 
 (https://arxiv.org/abs/1904.01030). The required data files are provided in the folder 
 [BOSS_DR12_CMASS_data/]().
 
-### Why is code called Victor?
-Why not? Originally Victor was an acronym for VoId-galaxy CorrelaTion cosmolOgy fitteR (generated using 
-[```acronym```](https://github.com/bacook17/acronym), of course). But now it is just Victor.
+### Why is the code called Victor?
+Why not? 
+
+(Originally Victor was an acronym for VoId-galaxy CorrelaTion cosmolOgy fitteR – generated using 
+[```acronym```](https://github.com/bacook17/acronym), of course. But now it is just Victor.)

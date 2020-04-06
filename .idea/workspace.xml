@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="71cc002b-9191-4b99-ae19-3e61ccabf90b" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/void-cosmo-fitter.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/void-cosmo-fitter.ipynb" afterDir="false" />
     </list>
@@ -94,5 +95,11 @@
       <updated>1557928278575</updated>
     </task>
     <servers />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="735" y="339" key="SettingsEditor" timestamp="1586199002897">
+      <screen x="0" y="23" width="2560" height="1365" />
+    </state>
+    <state x="735" y="339" key="SettingsEditor/0.23.2560.1365@0.23.2560.1365" timestamp="1586199002897" />
   </component>
 </project>
