@@ -3,7 +3,11 @@
   <component name="ChangeListManager">
     <list default="true" id="71cc002b-9191-4b99-ae19-3e61ccabf90b" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BOSS_DR12_CMASS_data/cmass_combined_recon_zobov-Voids_dm-profiles_R0.50.npy" beforeDir="false" afterPath="$PROJECT_DIR$/BOSS_DR12_CMASS_data/cmass_combined_recon_zobov-Voids_dm-profiles_R0.50.npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BOSS_DR12_CMASS_data/cmass_combined_recon_zobov-Voids_velocity-profiles_R0.50.npy" beforeDir="false" afterPath="$PROJECT_DIR$/BOSS_DR12_CMASS_data/cmass_combined_recon_zobov-Voids_velocity-profiles_R0.50.npy" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/parameters/boss_cmass_params.py" beforeDir="false" afterPath="$PROJECT_DIR$/parameters/boss_cmass_params.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/posterior_samplers/void_galaxy_posterior.py" beforeDir="false" afterPath="$PROJECT_DIR$/posterior_samplers/void_galaxy_posterior.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -64,11 +68,6 @@
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
-  </component>
-  <component name="ProjectFrameBounds" extendedState="6">
-    <option name="y" value="23" />
-    <option name="width" value="1280" />
-    <option name="height" value="697" />
   </component>
   <component name="ProjectId" id="1aAtTFHoxDrhL9hidzChqXb2vQl" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />

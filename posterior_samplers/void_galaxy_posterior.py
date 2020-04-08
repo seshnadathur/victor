@@ -44,7 +44,7 @@ class VoidGalaxyPosterior:
             # Model 3 has the simplest data vector and theory options
             self.use_recon = False
             if parms.reconstructed_data:
-                print('Theory model 2 does not require reconstruction!' )
+                print('Theory model 2 does not expect reconstruction' )
             # load the multipole data vector
             if not os.access(parms.s_space_multipole_file, os.F_OK):
                 sys.exit('s_space_multipole_file %s not found, aborting' % parms.s_space_multipole_file)
@@ -98,17 +98,15 @@ class VoidGalaxyPosterior:
             self.assume_lin_bias = parms.assume_lin_bias
             if not self.assume_lin_bias:
                 delta_data = np.load(parms.delta_file, allow_pickle=True).item()
-                if not np.all(delta_data['rvals'] == self.data_rvals):
-                    sys.exit('Sorry, the mutipoles and the DM density information need to have been ' +
-                             'provided in the same radial bins. Aborting')
                 # ext=3 below to control extrapolation beyond the r range to sensible values
-                self.delta_r = InterpolatedUnivariateSpline(self.data_rvals, delta_data['delta'], ext=3)
+                self.delta_r = InterpolatedUnivariateSpline(delta_data['rvals'], delta_data['delta'], ext=3)
                 # integrate for the cumulative density profile
-                integral = np.zeros_like(self.data_rvals)
+                integral = np.zeros_like(delta_data['rvals'])
                 for i in range(len(integral)):
-                    integral[i] = quad(lambda x: self.delta_r(x) * x**2, 0, self.data_rvals[i], full_output=1)[0]
+                    integral[i] = quad(lambda x: self.delta_r(x) * x**2, 0, delta_data['rvals'][i], full_output=1)[0]
                 # following function is the Delta(r) function appearing in the theory model
-                self.int_delta_r = InterpolatedUnivariateSpline(self.data_rvals, 3*integral/self.data_rvals**3, ext=3)
+                self.int_delta_r = InterpolatedUnivariateSpline(delta_data['rvals'],
+                                                                3*integral/delta_data['rvals']**3, ext=3)
                 self.sig8_norm = parms.sig8_norm  # only needed for Model 1 when not assuming linear bias in voids
 
                 # NOTE: we are assuming that the DM density profile monopole does not change with the reconstruction so
@@ -129,12 +127,9 @@ class VoidGalaxyPosterior:
                 if not os.access(parms.dispersion_file, os.F_OK):
                     sys.exit('dispersion_file %s not found, aborting' % parms.dispersion_file)
                 sv_data = np.load(parms.dispersion_file, allow_pickle=True).item()
-                if not np.all(sv_data['rvals'] == self.data_rvals):
-                    sys.exit('Sorry, the mutipoles and the velocity dispersion information need to have been ' +
-                             'provided in the same radial bins. Aborting')
                 # measured dispersion values are often noisy, so lightly smooth using a Savitsky-Golay filter
                 normed_sv = savgol_filter(sv_data['sigma_v_los'] / sv_data['sigma_v_los'][-1], 3, 1)
-                self.sv_norm_func = InterpolatedUnivariateSpline(self.data_rvals, normed_sv, ext=3)
+                self.sv_norm_func = InterpolatedUnivariateSpline(sv_data['rvals'], normed_sv, ext=3)
 
             if self.use_recon:
                 # get the grid of beta values for which reconstruction was performed
@@ -280,7 +275,7 @@ class VoidGalaxyPosterior:
         return r_multipoles
 
 
-    def model1_theory_without_lin_bias(self, fs8, bs8, sigma_v, alpha_perp, alpha_par, s):
+    def model1_theory_full(self, fs8, bs8, sigma_v, alpha_perp, alpha_par, s):
         """
         Method to calculate theoretical monopole and quadrupole of redshift-space void-galaxy cross-correlation in Model 1
         """
@@ -431,7 +426,7 @@ class VoidGalaxyPosterior:
 
         return theory_multipoles
 
-    def model2_theory_without_lin_bias(self, fs8, bs8, sigma_v, alpha_perp, alpha_par, s):
+    def model2_theory_full(self, fs8, bs8, sigma_v, alpha_perp, alpha_par, s):
         """
         Method to calculate theoretical monopole and quadrupole of redshift-space void-galaxy cross-correlation in Model 2
         """
@@ -647,12 +642,12 @@ class VoidGalaxyPosterior:
             if self.assume_lin_bias:
                 theory = self.model1_theory_with_lin_bias(beta, sigma_v, aperp, apar, self.data_rvals)
             else:
-                theory = self.model1_theory_without_lin_bias(fs8, bs8, sigma_v, aperp, apar, self.data_rvals)
+                theory = self.model1_theory_full(fs8, bs8, sigma_v, aperp, apar, self.data_rvals)
         elif self.theory_model == 2:
             if self.assume_lin_bias:
                 theory = self.model2_theory_with_lin_bias(beta, sigma_v, aperp, apar, self.data_rvals)
             else:
-                theory = self.model2_theory_without_lin_bias(fs8, bs8, sigma_v, aperp, apar, self.data_rvals)
+                theory = self.model2_theory_full(fs8, bs8, sigma_v, aperp, apar, self.data_rvals)
         else:  # ie, model 3
             theory = self.model3_theory_quadrupole(beta, self.xi_s_mono(self.data_rvals), self.int_xi_s_mono(self.data_rvals))
 
@@ -794,12 +789,12 @@ class VoidGalaxyPosterior:
             if self.assume_lin_bias:
                 theory = self.model1_theory_with_lin_bias(beta, sigma_v, aperp, apar, self.data_rvals)
             else:
-                theory = self.model1_theory_without_lin_bias(fs8, bs8, sigma_v, aperp, apar, self.data_rvals)
+                theory = self.model1_theory_full(fs8, bs8, sigma_v, aperp, apar, self.data_rvals)
         elif self.theory_model == 2:
             if self.assume_lin_bias:
                 theory = self.model2_theory_with_lin_bias(beta, sigma_v, aperp, apar, self.data_rvals)
             else:
-                theory = self.model2_theory_without_lin_bias(fs8, bs8, sigma_v, aperp, apar, self.data_rvals)
+                theory = self.model2_theory_full(fs8, bs8, sigma_v, aperp, apar, self.data_rvals)
         else:  # ie, model 3
             theory = self.model3_theory_quadrupole(beta, self.xi_s_mono(self.data_rvals), self.int_xi_s_mono(self.data_rvals))
 
