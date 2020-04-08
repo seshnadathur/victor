@@ -7,6 +7,7 @@ Python code for modelling and likelihood analysis of void-galaxy cross-correlati
    - ```numpy``` 
    - ```scipy``` 
    - [```emcee```](https://emcee.readthedocs.io/en/stable/) (for MCMC sampling)
+   - [```getdist```](https://github.com/cmbant/getdist) (only for posterior plots in the provided notebook)
 
 ### Quickstart usage:
 1. Create an input parameter file (see the example provided in [parameters/generic_likelihood_params.py]()) to point 
@@ -20,13 +21,9 @@ N to be appended to the end of subsequent chains (if option ```-c``` is not spec
 
 ### Modular usage:
 The code can also be used in modular fashion, e.g. for plotting theory models or data multipoles, calculating 
-chi-squared values, etc. To do this, do
-
-```from posterior_samplers.void_galaxy_posterior import VoidGalaxyPosterior```
-
-and initialise an instance of class ```VoidGalaxyPosterior``` by passing it the input options from your parameter file 
-(see the simple code in [run_sampler.py](run_sampler.py) for an example of how to do this, I will eventually include 
-a Jupyter notebook with demos). 
+chi-squared values, etc. Some examples of how to do this, and to reproduce the figures from Nadathur *et al.* 2019 
+([arXiv:1904.01030](https://arxiv.org/abs/1904.01030)) are shown in the demonstration notebook 
+[boss_cmass_data_demo.ipynb]() provided.
 
 ### Multiprocessing:
 [run_sampler.py](run_sampler.py) uses the ```multiprocessing``` package to automatically use all available
