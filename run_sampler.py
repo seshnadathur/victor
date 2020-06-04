@@ -32,25 +32,27 @@ def lnpost_global(theta):
     return void_gal_fitter.lnpost(theta)
 
 
-nsteps, nwalkers, ndim, burnin = 1000, 20, int(void_gal_fitter.ndim), 50
+nsteps, nwalkers, ndim, burnin = 200, 20, int(void_gal_fitter.ndim), 50
+start_values = parms.start_values
+scales = parms.scales
 if ndim == 4:
     # the case for Models 1 or 2 when not assuming linear bias
-    start_values = [0.5, 1.2, 390, 1]
-    scales = [0.05, 0.05, 10, 0.03]
+    if not (len(start_values) == 4 and len(scales) == 4):
+        sys.exit('start_values and scales should have length 4 for this model with no linear bias assumption')
     names = ['fs8', 'bs8', 'sigmav', 'epsilon']
     labels = [r'f\sigma_8', r'b\sigma_8', r'\sigma_{v_{||}}', r'\epsilon']
     ranges = {'fs8': [0.05, 1.5], 'bs8': [0.1, 2], 'sigmav': [250, 500], 'epsilon': [0.8, 1.2]}
 elif ndim == 3:
     # the case for Models 1 or 2 when assuming linear bias
-    start_values = [0.4, 390, 1]
-    scales = [0.05, 50, 0.03]
+    if not (len(start_values) == 3 and len(scales) == 3):
+        sys.exit('start_values and scales should have length 3 for this model with linear bias assumption')
     names = ['beta', 'sigmav', 'epsilon']
     labels = [r'\beta', r'\sigma_{v_{||}}', r'\epsilon']
     ranges = {'beta': void_gal_fitter.beta_prior_range, 'sigmav': [250, 500], 'epsilon': [0.8, 1.2]}
 if ndim == 1:
     # the case for Model 3
-    start_values = [0.4]
-    scales = [0.05]
+    if not (len(start_values) == 1 and len(scales) == 1):
+        sys.exit('start_values and scales should have length 1 for this model')
     names = ['beta']
     labels = [r'\beta']
     ranges = {'beta': void_gal_fitter.beta_prior_range}

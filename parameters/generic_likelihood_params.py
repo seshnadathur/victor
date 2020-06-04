@@ -49,6 +49,12 @@ assume_lin_bias = False
 # (this file should contain a dict, with item 'rvals' specifying r values and item 'delta' delta(r))
 delta_file = ''
 
+# central starting values for the MCMC over parameter space: should have the correct length for your chosen model!
+start_values = [0.5, 1.2, 380, 1]
+# rough estimate of posterior width in each parameter: this is used as the width of the Gaussian distribution from
+# which the actual starting values of the chain are sampled
+scales = [0.05, 0.05, 10, 0.03]
+
 # specify sigma8 value at the redshift z_sim of the simulation used for calibration (this is only used for Models 1
 # and 2, if assume_lin_bias is False)
 sig8_norm = 0.628  # this is the value for the BigMD box at z_sim=0.52 used for BOSS calibration
@@ -66,7 +72,7 @@ fiducial_omega_m = 0.31
 fiducial_omega_l = 0.69
 
 # effective redshift of the data
-eff_z = 0.52
+eff_z = 0.57
 
 # number of mocks from which the covariance matrix was estimated (0 if covmat not estimated from mocks)
 nmocks_covmat = 0

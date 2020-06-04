@@ -24,6 +24,9 @@ sig8_norm = 0.628  # this is the value for the BigMD box at z_sim=0.52 used for 
 constant_dispersion = False
 dispersion_file = data_dir + 'cmass_combined_recon_zobov-Voids_velocity-profiles_R0.50.npy'
 
+start_values = [0.5, 1.2, 380, 1]
+scales = [0.05, 0.05, 10, 0.03]
+
 fiducial_omega_m = 0.308
 fiducial_omega_l = 0.692
 eff_z = 0.57
