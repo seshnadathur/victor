@@ -33,8 +33,8 @@ def lnpost_global(theta):
 
 
 nsteps, nwalkers, ndim, burnin = 200, 20, int(void_gal_fitter.ndim), 50
-start_values = parms.start_values
-scales = parms.scales
+start_values = params.start_values
+scales = params.scales
 if ndim == 4:
     # the case for Models 1 or 2 when not assuming linear bias
     if not (len(start_values) == 4 and len(scales) == 4):
