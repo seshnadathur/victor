@@ -58,7 +58,7 @@ if ndim == 1:
     ranges = {'beta': void_gal_fitter.beta_prior_range}
 rootname = os.path.join(params.output_folder, params.root)
 
-start = np.asarray([start_values + np.random.randn(ndim) * scales * 1e-2 for i in range(nwalkers)])
+start = np.asarray([start_values + np.random.randn(ndim) * scales for i in range(nwalkers)])
 
 os.environ["OMP_NUM_THREADS"] = "1"
 
