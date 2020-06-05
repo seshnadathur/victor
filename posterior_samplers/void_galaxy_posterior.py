@@ -293,56 +293,47 @@ class VoidGalaxyPosterior:
         # Now we rescale the input monopole functions - xi_r(r), delta(r), Delta(r) and sigma_v(r) – to account for
         # the Alcock-Paczynski alpha shifts. To do this we rescale the argument of the functions according to eq (12)
         # of 1904.01030, and then re-interpolate the values using this new argument
-        mu = np.linspace(0, 1, 100)
-        rescaled_r = np.zeros_like(self.data_rvals)
-        for i, r in enumerate(self.data_rvals):
-            sqrt_term = np.sqrt(1 + (1 - mu**2) * ((alpha_perp / alpha_par)**2 - 1))
-            rescaled_r[i] = np.trapz((r * alpha_par) * sqrt_term, mu)
-        # NOTE: removed a hack to control extrapolation here, because I think it is unnecessary – check?
+        mu = np.linspace(0, 1)
+        mu_integral = np.trapz(alpha_par * np.sqrt(1 + (1 - mu**2) * ((alpha_perp / alpha_par)**2 - 1)), mu)
+        rescaled_r = self.data_rvals * mu_integral
         rescaled_xi_r = InterpolatedUnivariateSpline(rescaled_r, xi_r(self.data_rvals), ext=3)
         rescaled_delta_r = InterpolatedUnivariateSpline(rescaled_r, self.delta_r(self.data_rvals), ext=3)
         rescaled_int_delta_r = InterpolatedUnivariateSpline(rescaled_r, self.int_delta_r(self.data_rvals), ext=3)
         rescaled_sv_norm_func = InterpolatedUnivariateSpline(rescaled_r, self.sv_norm_func(self.data_rvals), ext=3)
-
+        sv_grad = InterpolatedUnivariateSpline(rescaled_r,
+                                               np.gradient(rescaled_sv_norm_func(rescaled_r), rescaled_r), ext=3)
         # and rescale the normalization of the sigma_v(r) function
         sigma_v = alpha_par * sigma_v
 
         # now we calculate the model xi(s, mu) on a grid of s and mu values
-        # here the argument s refers to the observed radial separation, and therefore differs from the "true" s by the
-        # AP factors
-        mu_grid = np.linspace(0, 1, 51)  # 51 is a compromise, should check this
-        s_grid = s
-        S, Mu = np.meshgrid(s_grid, mu_grid)
+        # here argument s refers to the observed radial separation, so differs from the "true" s by the AP factors
+        mu_grid = np.linspace(0, 1)
+        y_grid = np.linspace(-5, 5)
+        S, Mu, Y = np.meshgrid(s, mu_grid, y_grid)
         true_sperp = S * np.sqrt(1 - Mu**2) * alpha_perp
         true_spar = S * Mu * alpha_par
         true_s = np.sqrt(true_spar**2 + true_sperp**2)
         true_mu = true_spar / true_s
 
-        # r_par is the parallel separation in real-space; this is the value for coherent outflow with zero vel. dispersion
+        # r_par is the parallel separation in real-space
         r_par = true_spar + true_s * scaled_fs8 * rescaled_int_delta_r(true_s) * true_mu / 3
+        sy_central = sigma_v * rescaled_sv_norm_func(np.sqrt(true_sperp**2 + r_par**2)) * self.iaH
+        y = sy_central * Y
+        rpar = r_par - y
+        r = np.sqrt(true_sperp**2 + rpar**2)
+        sy = sigma_v * rescaled_sv_norm_func(r) * self.iaH
+        dy = sigma_v * sv_grad(r) * self.iaH
+        # this term corresponds to v_r/raH where v_r is radial outflow (plus component of random dispersion velocity)
+        vr_term = -scaled_fs8 * rescaled_int_delta_r(r) / 3 + y * true_mu / r
+        # this term corresponds to 1/aH times derivative wrt r of radial outflow velocity component
+        vr_prime_term = -scaled_fs8 * (rescaled_delta_r(r) - 2 * rescaled_int_delta_r(r) / 3) + (dy / r) * true_mu
+        integrand = (1 + rescaled_xi_r(r)) * (1 + vr_term + (vr_prime_term - vr_term) * true_mu**2)**(-1) * \
+                    np.exp(-0.5 * (y/sy)**2) / (sy * np.sqrt(2 * np.pi))
 
-        # now integrate over y at each (s, mu) combination
-        xi_model_grid = np.zeros_like(S)
-        for i in range(xi_model_grid.shape[0]):
-            for j in range(xi_model_grid.shape[1]):
-                # express the velocity dispersion in terms of distances
-                sy_central = sigma_v * rescaled_sv_norm_func(np.sqrt(true_sperp[i, j]**2 + r_par[i, j]**2)) * self.iaH
-                y = np.linspace(-5 * sy_central, 5* sy_central, 100)
-                # the value of r_par including dispersion
-                rpary = r_par[i, j] - y
-                r = np.sqrt(true_sperp[i, j]**2 + rpary**2)
-                sy = sigma_v * rescaled_sv_norm_func(r) * self.iaH
-                integrand = (1 + rescaled_xi_r(r)) * \
-                            (1 + (scaled_fs8 * rescaled_int_delta_r(r) / 3 - y * true_mu[i, j] / r)
-                             * (1 - true_mu[i, j]**2) +
-                             scaled_fs8 * (rescaled_delta_r(r) - 2 * rescaled_int_delta_r(r) / 3) * true_mu[i, j]**2)
-                integrand = integrand * np.exp(- (y**2) / (2 * sy**2)) / (np.sqrt(2 * np.pi) * sy)
-
-                # print(np.trapz(integrand, y) - 1)
-                xi_model_grid[i, j] = np.trapz(integrand, y) - 1
+        xi_model_grid = np.trapz(integrand, x=y, axis=2) - 1
 
         # now build the true model by interpolating over this grid
-        xi_model = interp2d(s_grid, mu_grid, xi_model_grid, kind='cubic')
+        xi_model = interp2d(s, mu_grid, xi_model_grid, kind='cubic')
 
         # and get the multipoles
         theory_multipoles = np.zeros(2 * len(s))
@@ -367,13 +358,13 @@ class VoidGalaxyPosterior:
         # Now we rescale the input monopole functions - xi_r(r), and sigma_v(r) – to account for
         # the Alcock-Paczynski alpha shifts. To do this we rescale the argument of the functions according to eq (12)
         # of 1904.01030, and then re-interpolate the values using this new argument
-        mu = np.linspace(0, 1, 100)
-        rescaled_r = np.zeros_like(self.data_rvals)
-        for i, r in enumerate(self.data_rvals):
-            sqrt_term = np.sqrt(1 + (1 - mu**2) * ((alpha_perp / alpha_par)**2 - 1))
-            rescaled_r[i] = np.trapz((r * alpha_par) * sqrt_term, mu)
+        mu = np.linspace(0, 1)
+        mu_integral = np.trapz(alpha_par * np.sqrt(1 + (1 - mu**2) * ((alpha_perp / alpha_par)**2 - 1)), mu)
+        rescaled_r = self.data_rvals * mu_integral
         rescaled_xi_r = InterpolatedUnivariateSpline(rescaled_r, xi_r(self.data_rvals), ext=3)
         rescaled_sv_norm_func = InterpolatedUnivariateSpline(rescaled_r, self.sv_norm_func(self.data_rvals), ext=3)
+        sv_grad = InterpolatedUnivariateSpline(rescaled_r,
+                                               np.gradient(rescaled_sv_norm_func(rescaled_r), rescaled_r), ext=3)
         # integrate the rescaled xi_vg monopole
         integral = np.zeros_like(rescaled_r)
         for i in range(len(integral)):
@@ -385,36 +376,30 @@ class VoidGalaxyPosterior:
         # now we calculate the model xi(s, mu) on a grid of s and mu values
         # here the argument s refers to the observed radial separation, and therefore differs from the
         # "true" s by the AP factors
-        mu_grid = np.linspace(0, 1, 51)  # 51 is a compromise, should check this
-        s_grid = s
-        S, Mu = np.meshgrid(s_grid, mu_grid)
+        mu_grid = np.linspace(0, 1)
+        y_grid = np.linspace(-5, 5)
+        S, Mu = np.meshgrid(s, mu_grid, y_grid)
         true_sperp = S * np.sqrt(1 - Mu**2) * alpha_perp
         true_spar = S * Mu * alpha_par
         true_s = np.sqrt(true_spar**2 + true_sperp**2)
         true_mu = true_spar / true_s
 
-        # r_par is the parallel separation in real-space; this is the value for coherent outflow with zero
-        # velocity dispersion
+        # r_par is the parallel separation in real-space
         r_par = true_spar + true_s * beta * rescaled_int_xi_r(true_s) * true_mu / 3
+        sy_central = sigma_v * rescaled_sv_norm_func(np.sqrt(true_sperp**2 + r_par**2)) * self.iaH
+        y = sy_central * Y
+        rpar = r_par - y
+        r = np.sqrt(true_sperp**2 + rpar**2)
+        sy = sigma_v * rescaled_sv_norm_func(r) * self.iaH
+        dy = sigma_v * sv_grad(r) * self.iaH
+        # this term corresponds to v_r/raH where v_r is radial outflow (plus component of random dispersion velocity)
+        vr_term = -beta * rescaled_int_xi_r(r) / 3 + y * true_mu / r
+        # this term corresponds to 1/aH times derivative wrt r of radial outflow velocity component
+        vr_prime_term = -beta * (rescaled_xi_r(r) - 2 * rescaled_int_xi_r(r) / 3) + (dy / r) * true_mu
+        integrand = (1 + rescaled_xi_r(r)) * (1 + vr_term + (vr_prime_term - vr_term) * true_mu**2)**(-1) * \
+                    np.exp(-0.5 * (y/sy)**2) / (sy * np.sqrt(2 * np.pi))
 
-        # now integrate over y at each (s, mu) combination
-        xi_model_grid = np.zeros_like(S)
-        for i in range(xi_model_grid.shape[0]):
-            for j in range(xi_model_grid.shape[1]):
-                # express the velocity dispersion in terms of distances
-                sy_central = sigma_v * rescaled_sv_norm_func(np.sqrt(true_sperp[i, j]**2 + r_par[i, j]**2)) * self.iaH
-                y = np.linspace(-5 * sy_central, 5* sy_central, 100)
-                # the value of r_par including dispersion
-                rpary = r_par[i, j] - y
-                r = np.sqrt(true_sperp[i, j]**2 + rpary**2)
-                sy = sigma_v * rescaled_sv_norm_func(r) * self.iaH
-                integrand = (1 + rescaled_xi_r(r)) * \
-                            (1 + (beta * rescaled_int_xi_r(r) / 3 - y * true_mu[i, j] / r)
-                             * (1 - true_mu[i, j]**2) +
-                             beta * (rescaled_xi_r(r) - 2 * rescaled_int_xi_r(r) / 3) * true_mu[i, j]**2)
-                integrand = integrand * np.exp(- (y**2) / (2 * sy**2)) / (np.sqrt(2 * np.pi) * sy)
-
-                xi_model_grid[i, j] = np.trapz(integrand, y) - 1
+        xi_model_grid = np.trapz(integrand, x=y, axis=2) - 1
 
         # now build the true model by interpolating over this grid
         xi_model = interp2d(s_grid, mu_grid, xi_model_grid, kind='cubic')
@@ -444,11 +429,9 @@ class VoidGalaxyPosterior:
         # Now we rescale the input monopole functions - xi_r(r), delta(r), Delta(r) and sigma_v(r) – to account for
         # the Alcock-Paczynski alpha shifts. To do this we rescale the argument of the functions according to eq (12)
         # of 1904.01030, and then re-interpolate the values using this new argument
-        mu = np.linspace(0, 1, 100)
-        rescaled_r = np.zeros_like(self.data_rvals)
-        for i, r in enumerate(self.data_rvals):
-            sqrt_term = np.sqrt(1 + (1 - mu**2) * ((alpha_perp / alpha_par)**2 - 1))
-            rescaled_r[i] = np.trapz((r * alpha_par) * sqrt_term, mu)
+        mu = np.linspace(0, 1)
+        mu_integral = np.trapz(alpha_par * np.sqrt(1 + (1 - mu**2) * ((alpha_perp / alpha_par)**2 - 1)), mu)
+        rescaled_r = self.data_rvals * mu_integral
         rescaled_xi_r = InterpolatedUnivariateSpline(rescaled_r, xi_r(self.data_rvals), ext=3)
         rescaled_int_delta_r = InterpolatedUnivariateSpline(rescaled_r, self.int_delta_r(self.data_rvals), ext=3)
         rescaled_sv_norm_func = InterpolatedUnivariateSpline(rescaled_r, self.sv_norm_func(self.data_rvals), ext=3)
@@ -457,11 +440,11 @@ class VoidGalaxyPosterior:
         sigma_v = alpha_par * sigma_v
 
         # now we calculate the model xi(s, mu) on a grid of s and mu values
-        # here the argument s refers to the observed radial separation, and therefore differs from the "true" s by the
+        # here argument s refers to the observed radial separation, so differs from the "true" s by the
         # AP factors
-        mu_grid = np.linspace(0, 1, 51)  # 51 is a compromise, should check this
-        s_grid = s
-        S, Mu = np.meshgrid(s_grid, mu_grid)
+        mu_grid = np.linspace(0, 1)
+        v_grid = np.linspace(-5, 5)
+        S, Mu, V = np.meshgrid(s, mu_grid, v_grid)
         true_sperp = S * np.sqrt(1 - Mu**2) * alpha_perp
         true_spar = S * Mu * alpha_par
         true_s = np.sqrt(true_spar**2 + true_sperp**2)
@@ -471,36 +454,20 @@ class VoidGalaxyPosterior:
         # so compare this next line to the equivalent in model 1 functions
         r_par = true_spar
 
-        # now integrate over y at each (s, mu) combination
-        xi_model_grid = np.zeros_like(S)
-        for i in range(xi_model_grid.shape[0]):
-            for j in range(xi_model_grid.shape[1]):
-                # component of coherent outflow velocity along the line-of-sight
-                vel_par = -scaled_fs8 * true_s[i, j] * rescaled_int_delta_r(true_s[i, j]) / (3 * self.iaH) * true_mu[i, j]
-
-                # array of velocity values around this mean
-                sv_central = sigma_v * rescaled_sv_norm_func(true_s[i, j])
-                v = vel_par + np.linspace(-5 * sv_central, 5* sv_central, 100)
-
-                # the value of r_par and r accounting for the velocity shift
-                rpary = r_par[i, j] - v * self.iaH
-                r = np.sqrt(true_sperp[i, j]**2 + rpary**2)
-                # (note again that s and r are interchangeable in this model)
-
-                # the value of sigma_v(r)
-                sv = sigma_v * rescaled_sv_norm_func(r)
-
-                # and the value of the coherent radial velocity component v(r) times mu
-                vel_r_mu = -scaled_fs8 * r * rescaled_int_delta_r(r) / (3 * self.iaH) * true_mu[i, j]
-
-                # now the integral
-                integrand = (1 + rescaled_xi_r(r)) * np.exp(-0.5 * ((v - vel_r_mu) / sv)**2)
-                integrand = integrand / (np.sqrt(2 * np.pi) * sv)
-
-                xi_model_grid[i, j] = np.trapz(integrand, v) - 1
+        # component of coherent outflow velocity along the line-of-sight
+        vel_par = -scaled_fs8 * true_s * rescaled_int_delta_r(true_s) / (3 * self.iaH) * true_mu
+        # now allow for spread in velocities and integrate over the distribution
+        sv_central = sigma_v * rescaled_sv_norm_func(true_s)
+        v = vel_par + sv_central * V
+        r_par = r_par - v * self.iaH
+        r = np.sqrt(true_sperp**2 + rpar**2)
+        sv = sigma_v * rescaled_sv_norm_func(r)
+        vel_r_mu = -scaled_fs8 * r * rescaled_int_delta_r(r) / (3 * self.iaH) * true_mu
+        integrand = (1 + rescaled_xi_r(r)) * np.exp(-0.5 * ((v - vel_r_mu) / sv)**2) / (np.sqrt(2 * np.pi) * sv)
+        xi_model_grid = np.trapz(integrand, x=y, axis=2) - 1
 
         # now build the true model by interpolating over this grid
-        xi_model = interp2d(s_grid, mu_grid, xi_model_grid, kind='cubic')
+        xi_model = interp2d(s, mu_grid, xi_model_grid, kind='cubic')
 
         # and get the multipoles
         theory_multipoles = np.zeros(2 * len(s))
@@ -525,11 +492,9 @@ class VoidGalaxyPosterior:
         # Now we rescale the input monopole functions - xi_r(r), delta(r), Delta(r) and sigma_v(r) – to account for
         # the Alcock-Paczynski alpha shifts. To do this we rescale the argument of the functions according to eq (12)
         # of 1904.01030, and then re-interpolate the values using this new argument
-        mu = np.linspace(0, 1, 100)
-        rescaled_r = np.zeros_like(self.data_rvals)
-        for i, r in enumerate(self.data_rvals):
-            sqrt_term = np.sqrt(1 + (1 - mu**2) * ((alpha_perp / alpha_par)**2 - 1))
-            rescaled_r[i] = np.trapz((r * alpha_par) * sqrt_term, mu)
+        mu = np.linspace(0, 1)
+        mu_integral = np.trapz(alpha_par * np.sqrt(1 + (1 - mu**2) * ((alpha_perp / alpha_par)**2 - 1)), mu)
+        rescaled_r = self.data_rvals * mu_integral
         rescaled_xi_r = InterpolatedUnivariateSpline(rescaled_r, xi_r(self.data_rvals), ext=3)
         rescaled_sv_norm_func = InterpolatedUnivariateSpline(rescaled_r, self.sv_norm_func(self.data_rvals), ext=3)
         # integrate the rescaled xi_vg monopole
@@ -537,16 +502,15 @@ class VoidGalaxyPosterior:
         for i in range(len(integral)):
             integral[i] = quad(lambda x: rescaled_xi_r(x) * x**2, 0, rescaled_r[i], full_output=1)[0]
         rescaled_int_xi_r = InterpolatedUnivariateSpline(rescaled_r, 3*integral/rescaled_r**3, ext=3)
-
         # and rescale the normalization of the sigma_v(r) function
         sigma_v = alpha_par * sigma_v
 
         # now we calculate the model xi(s, mu) on a grid of s and mu values
         # here the argument s refers to the observed radial separation, and therefore differs from the "true" s by the
         # AP factors
-        mu_grid = np.linspace(0, 1, 51)  # 51 is a compromise, should check this
-        s_grid = s
-        S, Mu = np.meshgrid(s_grid, mu_grid)
+        mu_grid = np.linspace(0, 1)
+        v_grid = np.linspace(-5, 5)
+        S, Mu, V = np.meshgrid(s, mu_grid, v_grid)
         true_sperp = S * np.sqrt(1 - Mu**2) * alpha_perp
         true_spar = S * Mu * alpha_par
         true_s = np.sqrt(true_spar**2 + true_sperp**2)
@@ -556,36 +520,20 @@ class VoidGalaxyPosterior:
         # so compare this next line to the equivalent in model 1 functions
         r_par = true_spar
 
-        # now integrate over y at each (s, mu) combination
-        xi_model_grid = np.zeros_like(S)
-        for i in range(xi_model_grid.shape[0]):
-            for j in range(xi_model_grid.shape[1]):
-                # component of coherent outflow velocity along the line-of-sight
-                vel_par = -beta * true_s[i, j] * rescaled_int_xi_r(true_s[i, j]) / (3 * self.iaH) * true_mu[i, j]
-
-                # array of velocity values around this mean
-                sv_central = sigma_v * rescaled_sv_norm_func(true_s[i, j])
-                v = vel_par + np.linspace(-5 * sv_central, 5* sv_central, 100)
-
-                # the value of r_par and r accounting for the velocity shift
-                rpary = r_par[i, j] - v * self.iaH
-                r = np.sqrt(true_sperp[i, j]**2 + rpary**2)
-                # (note again that s and r are interchangeable in this model)
-
-                # the value of sigma_v(r)
-                sv = sigma_v * rescaled_sv_norm_func(r)
-
-                # and the value of the coherent radial velocity component v(r) times mu
-                vel_r_mu = -beta * r * rescaled_int_xi_r(r) / (3 * self.iaH) * true_mu[i, j]
-
-                # now the integral
-                integrand = (1 + rescaled_xi_r(r)) * np.exp(-0.5 * ((v - vel_r_mu) / sv)**2)
-                integrand = integrand / (np.sqrt(2 * np.pi) * sv)
-
-                xi_model_grid[i, j] = np.trapz(integrand, v) - 1
+        # component of coherent outflow velocity along the line-of-sight
+        vel_par = -beta * true_s * rescaled_int_xi_r(true_s) / (3 * self.iaH) * true_mu
+        # now allow for spread in velocities and integrate over the distribution
+        sv_central = sigma_v * rescaled_sv_norm_func(true_s)
+        v = vel_par + sv_central * V
+        r_par = r_par - v * self.iaH
+        r = np.sqrt(true_sperp**2 + rpar**2)
+        sv = sigma_v * rescaled_sv_norm_func(r)
+        vel_r_mu = -beta * r * rescaled_int_xi_r(r) / (3 * self.iaH) * true_mu
+        integrand = (1 + rescaled_xi_r(r)) * np.exp(-0.5 * ((v - vel_r_mu) / sv)**2) / (np.sqrt(2 * np.pi) * sv)
+        xi_model_grid = np.trapz(integrand, x=y, axis=2) - 1
 
         # now build the true model by interpolating over this grid
-        xi_model = interp2d(s_grid, mu_grid, xi_model_grid, kind='cubic')
+        xi_model = interp2d(s, mu_grid, xi_model_grid, kind='cubic')
 
         # and get the multipoles
         theory_multipoles = np.zeros(2 * len(s))
