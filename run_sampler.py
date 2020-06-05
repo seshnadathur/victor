@@ -98,7 +98,7 @@ with Pool() as pool:
             acor[i] = UtilMethods.autocorrelation(full_chain[:, :, i].T)
             print("\t %s: %0.3f" % (names[i], acor[i]))
         sys.stdout.flush()
-        if nwalkers * ntotal > 200 * np.max(acor):
+        if nwalkers * ntotal > params.stop_factor * np.max(acor):
             # chain is long enough for convergence in each parameter
             print('Chain converged, stopping')
             continue_run = False

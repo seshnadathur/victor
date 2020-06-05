@@ -54,6 +54,8 @@ start_values = [0.5, 1.2, 380, 1]
 # rough estimate of posterior width in each parameter: this is used as the width of the Gaussian distribution from
 # which the actual starting values of the chain are sampled
 scales = [0.05, 0.05, 10, 0.03]
+# stop condition for emcee chain: length of chain in units of autocorrelation length of most correlated parameter
+stop_factor = 100
 
 # specify sigma8 value at the redshift z_sim of the simulation used for calibration (this is only used for Models 1
 # and 2, if assume_lin_bias is False)

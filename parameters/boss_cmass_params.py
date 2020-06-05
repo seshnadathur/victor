@@ -26,6 +26,7 @@ dispersion_file = data_dir + 'cmass_combined_recon_zobov-Voids_velocity-profiles
 
 start_values = [0.5, 1.2, 380, 1]
 scales = [0.05, 0.05, 10, 0.03]
+stop_factor = 200
 
 fiducial_omega_m = 0.308
 fiducial_omega_l = 0.692

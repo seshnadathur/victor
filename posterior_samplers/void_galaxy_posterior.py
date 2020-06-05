@@ -378,7 +378,7 @@ class VoidGalaxyPosterior:
         # "true" s by the AP factors
         mu_grid = np.linspace(0, 1)
         y_grid = np.linspace(-5, 5)
-        S, Mu = np.meshgrid(s, mu_grid, y_grid)
+        S, Mu, Y = np.meshgrid(s, mu_grid, y_grid)
         true_sperp = S * np.sqrt(1 - Mu**2) * alpha_perp
         true_spar = S * Mu * alpha_par
         true_s = np.sqrt(true_spar**2 + true_sperp**2)
@@ -402,7 +402,7 @@ class VoidGalaxyPosterior:
         xi_model_grid = np.trapz(integrand, x=y, axis=2) - 1
 
         # now build the true model by interpolating over this grid
-        xi_model = interp2d(s_grid, mu_grid, xi_model_grid, kind='cubic')
+        xi_model = interp2d(s, mu_grid, xi_model_grid, kind='cubic')
 
         # and get the multipoles
         theory_multipoles = np.zeros(2 * len(s))
