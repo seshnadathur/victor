@@ -637,6 +637,12 @@ class VoidGalaxyPosterior:
             # use the Sellentin & Heavens approach to propagate the uncertainty in the covariance estimation
             lnlkl = -self.nmocks_covmat * np.log(1 + chisq / (self.nmocks_covmat - 1)) / 2 + like_factor
 
+        if np.isnan(lnlkl):
+            # catch cases which fail, either because chisq is -inf or because error in the like_factor
+            print('Likelihood evaluation failed at theta = ', theta)
+            print('Chisq: ', chisq, ' like_factor: ', like_factor)
+            lnlkl = -np.inf
+
         return lnlkl
 
 
