@@ -460,7 +460,7 @@ class VoidGalaxyPosterior:
         sv_central = sigma_v * rescaled_sv_norm_func(true_s)
         v = vel_par + sv_central * V
         r_par = r_par - v * self.iaH
-        r = np.sqrt(true_sperp**2 + rpar**2)
+        r = np.sqrt(true_sperp**2 + r_par**2)
         sv = sigma_v * rescaled_sv_norm_func(r)
         vel_r_mu = -scaled_fs8 * r * rescaled_int_delta_r(r) / (3 * self.iaH) * true_mu
         integrand = (1 + rescaled_xi_r(r)) * np.exp(-0.5 * ((v - vel_r_mu) / sv)**2) / (np.sqrt(2 * np.pi) * sv)
@@ -526,7 +526,7 @@ class VoidGalaxyPosterior:
         sv_central = sigma_v * rescaled_sv_norm_func(true_s)
         v = vel_par + sv_central * V
         r_par = r_par - v * self.iaH
-        r = np.sqrt(true_sperp**2 + rpar**2)
+        r = np.sqrt(true_sperp**2 + r_par**2)
         sv = sigma_v * rescaled_sv_norm_func(r)
         vel_r_mu = -beta * r * rescaled_int_xi_r(r) / (3 * self.iaH) * true_mu
         integrand = (1 + rescaled_xi_r(r)) * np.exp(-0.5 * ((v - vel_r_mu) / sv)**2) / (np.sqrt(2 * np.pi) * sv)
