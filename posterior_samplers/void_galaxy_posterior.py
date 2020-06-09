@@ -464,7 +464,7 @@ class VoidGalaxyPosterior:
         sv = sigma_v * rescaled_sv_norm_func(r)
         vel_r_mu = -scaled_fs8 * r * rescaled_int_delta_r(r) / (3 * self.iaH) * true_mu
         integrand = (1 + rescaled_xi_r(r)) * np.exp(-0.5 * ((v - vel_r_mu) / sv)**2) / (np.sqrt(2 * np.pi) * sv)
-        xi_model_grid = np.trapz(integrand, x=y, axis=2) - 1
+        xi_model_grid = np.trapz(integrand, x=v, axis=2) - 1
 
         # now build the true model by interpolating over this grid
         xi_model = interp2d(s, mu_grid, xi_model_grid, kind='cubic')
@@ -530,7 +530,7 @@ class VoidGalaxyPosterior:
         sv = sigma_v * rescaled_sv_norm_func(r)
         vel_r_mu = -beta * r * rescaled_int_xi_r(r) / (3 * self.iaH) * true_mu
         integrand = (1 + rescaled_xi_r(r)) * np.exp(-0.5 * ((v - vel_r_mu) / sv)**2) / (np.sqrt(2 * np.pi) * sv)
-        xi_model_grid = np.trapz(integrand, x=y, axis=2) - 1
+        xi_model_grid = np.trapz(integrand, x=v, axis=2) - 1
 
         # now build the true model by interpolating over this grid
         xi_model = interp2d(s, mu_grid, xi_model_grid, kind='cubic')
