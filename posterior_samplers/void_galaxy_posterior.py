@@ -44,7 +44,7 @@ class VoidGalaxyPosterior:
             # Model 3 has the simplest data vector and theory options
             self.use_recon = False
             if parms.reconstructed_data:
-                print('Theory model 2 does not expect reconstruction' )
+                print('Theory model 3 does not expect reconstruction' )
             # load the multipole data vector
             if not os.access(parms.s_space_multipole_file, os.F_OK):
                 sys.exit('s_space_multipole_file %s not found, aborting' % parms.s_space_multipole_file)
@@ -638,7 +638,7 @@ class VoidGalaxyPosterior:
             lnlkl = -self.nmocks_covmat * np.log(1 + chisq / (self.nmocks_covmat - 1)) / 2 + like_factor
 
         if np.isnan(lnlkl):
-            # catch cases which fail, either because chisq is -inf or because error in the like_factor
+            # catch cases which fail, either because chisq is -ve or because error in the like_factor
             print('Likelihood evaluation failed at theta = ', theta)
             print('Chisq: ', chisq, ' like_factor: ', like_factor)
             lnlkl = -np.inf
