@@ -102,6 +102,9 @@ with Pool() as pool:
             # chain is long enough for convergence in each parameter
             print('Chain converged, stopping')
             continue_run = False
+        elif ntotal > params.max_steps:
+            print('Maximum chain length exceeded, stopping')
+            continue_run = False
         else:
             print('Chain not yet converged, continuing')
         sys.stdout.flush()
