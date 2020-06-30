@@ -32,7 +32,7 @@ def lnpost_global(theta):
     return void_gal_fitter.lnpost(theta)
 
 
-nsteps, nwalkers, ndim, burnin = 200, 20, int(void_gal_fitter.ndim), 50
+nsteps, nwalkers, ndim, burnin = 200, 100, int(void_gal_fitter.ndim), 50
 start_values = params.start_values
 scales = params.scales
 if ndim == 4:
