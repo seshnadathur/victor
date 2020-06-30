@@ -663,7 +663,7 @@ class VoidGalaxyPosterior:
             if self.assume_lin_bias:
                 beta, sigma_v, epsilon = theta
                 if self.beta_prior_range[0] < beta < self.beta_prior_range[1] and \
-                    250 < sigma_v < 500 and 0.8 < epsilon < 1.2:
+                    100 < sigma_v < 500 and 0.8 < epsilon < 1.2:
                     return 0.
             else:
                 fs8, bs8, sigma_v, epsilon = theta
@@ -671,7 +671,7 @@ class VoidGalaxyPosterior:
                 apar = epsilon ** (-2./3)
                 aperp = epsilon * apar
                 if self.beta_prior_range[0] < beta < self.beta_prior_range[1] and \
-                    0.05 < fs8 < 1.5 and 0.1 < bs8 < 2 and 250 < sigma_v < 500 and \
+                    0.05 < fs8 < 1.5 and 0.1 < bs8 < 2 and 100 < sigma_v < 500 and \
                     0.8 < epsilon < 1.2:
                     return 0.
 
