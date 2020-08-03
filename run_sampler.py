@@ -76,7 +76,7 @@ with Pool() as pool:
     continue_run = True
     while continue_run:
         state = sampler.run_mcmc(state, nsteps, progress=True, thin_by=5)
-        part_chain = sampler.flatchain
+        part_chain = sampler.get_chain(flat=True)
         lnprob = sampler.get_log_prob().flatten()
         output = np.ones((part_chain.shape[0], part_chain.shape[1] + 2))
         output[:, 1] = lnprob
