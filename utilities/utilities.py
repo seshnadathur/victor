@@ -46,11 +46,12 @@ class NonFlatBackground:
 
     def __init__(self, omega_m=0.31, omega_l=0.69, h=0.676):
         # print('Initializing cosmology with omega_m = %.3f' % omega_m)
+        c = constants.c / 1000
         omega_k = 1. - omega_m - omega_l
         ztab = np.linspace(0, 4, 1000)
         rtab = np.zeros_like(ztab)
         for i in range(len(ztab)):
-            rtab[i] = quad(lambda x: 0.01 * (const.c / 1000) \
+            rtab[i] = quad(lambda x: 0.01 * c \
             / np.sqrt(omega_m * (1 + x)**3 + omega_k * (1 + x)**2 + omega_l), 0, ztab[i])[0]
 
         self.h = h
