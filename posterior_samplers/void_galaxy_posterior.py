@@ -195,7 +195,7 @@ class VoidGalaxyPosterior:
                     interpolator = InterpolatedUnivariateSpline(self.beta_grid, self.s_multipoles[:, i], ext=2)
                     s_multipoles[i] = interpolator(beta)
             except ValueError:
-                return np.zeros_like(s)
+                return np.zeros(2 * self.nrbins)
         else:
             s_multipoles = self.s_multipoles
 
@@ -267,7 +267,7 @@ class VoidGalaxyPosterior:
                     interpolator = InterpolatedUnivariateSpline(self.beta_grid, self.r_multipoles[:, i], ext=2)
                     r_multipoles[i] = interpolator(beta)
             except ValueError:
-                return np.zeros_like(s)
+                return np.zeros(2 * self.nrbins)
         else:
             print("Mistaken call to interpolated_r_multipoles: your real-space multipoles do not depend on beta!")
             r_multipoles = self.r_multipoles
@@ -411,6 +411,7 @@ class VoidGalaxyPosterior:
 
         return theory_multipoles
 
+
     def model2_theory_full(self, fs8, bs8, sigma_v, alpha_perp, alpha_par, s):
         """
         Method to calculate theoretical monopole and quadrupole of redshift-space void-galaxy cross-correlation in Model 2
@@ -458,7 +459,7 @@ class VoidGalaxyPosterior:
         vel_par = -scaled_fs8 * true_s * rescaled_int_delta_r(true_s) / (3 * self.iaH) * true_mu
         # now allow for spread in velocities and integrate over the distribution
         sv_central = sigma_v * rescaled_sv_norm_func(true_s)
-        v = vel_par + sv_central * V
+        v = sv_central * V
         r_par = r_par - v * self.iaH
         r = np.sqrt(true_sperp**2 + r_par**2)
         sv = sigma_v * rescaled_sv_norm_func(r)
@@ -524,7 +525,7 @@ class VoidGalaxyPosterior:
         vel_par = -beta * true_s * rescaled_int_xi_r(true_s) / (3 * self.iaH) * true_mu
         # now allow for spread in velocities and integrate over the distribution
         sv_central = sigma_v * rescaled_sv_norm_func(true_s)
-        v = vel_par + sv_central * V
+        v = sv_central * V
         r_par = r_par - v * self.iaH
         r = np.sqrt(true_sperp**2 + r_par**2)
         sv = sigma_v * rescaled_sv_norm_func(r)
