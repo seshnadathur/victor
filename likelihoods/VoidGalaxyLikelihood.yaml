@@ -1,0 +1,73 @@
+# this file contains the default settings with which the likelihood will be run
+# these defaults will be overwritten by options provided in the input file used
+# when invoking Cobaya
+
+# the yaml file with the full options for the given dataset
+spec_file: parameter_files/boss_cmass_params.yaml
+
+# Aliases for automatic covariance matrix
+aliases: [vgcorr]
+
+# Speed in evaluations/second (after theory inputs calculated).
+speed: 5
+
+params:
+  fsigma8:
+    prior:
+      dist: uniform
+      min: 0.05
+      max: 1.5
+    ref:
+      dist: norm
+      loc: 0.47
+      scale: 0.05
+    proposal: 0.5
+    latex: f\sigma_8
+
+  bsigma8:
+    prior:
+      dist: uniform
+      min: 0.1
+      max: 2
+    ref:
+      dist: norm
+      loc: 1.25
+      scale: 0.1
+    proposal: 0.5
+    latex: b\sigma_8
+
+  sigma_v:
+    prior:
+      dist: uniform
+      min: 100
+      max: 500
+    ref:
+      dist: norm
+      loc: 380
+      scale: 20
+    proposal: 20
+    latex: \sigma_v
+
+  aperp:
+    prior:
+      dist: uniform
+      min: 0.8
+      max: 1.2
+    ref:
+      dist: norm
+      loc: 1.0
+      scale: 0.02
+    proposal: 0.5
+    latex: \alpha_{\perp}
+
+  apar:
+    prior:
+      dist: uniform
+      min: 0.8
+      max: 1.2
+    ref:
+      dist: norm
+      loc: 1.0
+      scale: 0.02
+    proposal: 0.5
+    latex: \alpha_{||}

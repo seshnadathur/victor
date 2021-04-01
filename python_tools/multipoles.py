@@ -2,7 +2,7 @@ import numpy as np
 from scipy.integrate import quad
 from scipy.special import legendre
 
-def correlation_multipoles(xirmu, r, ell=0):
+def multipoles(xirmu, r, ell=0):
 	"""
 	Calculate the Legendre multipoles of a correlation function xi(r, mu)
 
@@ -22,4 +22,3 @@ def correlation_multipoles(xirmu, r, ell=0):
 		output[i] = quad(lambda x: xirmu(r[i], x) * lmu(x) * (2 * ell + 1), 0, 1, full_output=1)[0]
 
 	return output
-

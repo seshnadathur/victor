@@ -1,11 +1,10 @@
 import os
 import sys
 import numpy as np
-from utilities.utilities import UtilMethods, Cosmology, NonFlatBackground
+from python_tools import cosmology, multipoles, utilities
 from scipy.integrate import quad
 from scipy.signal import savgol_filter
 from scipy.interpolate import InterpolatedUnivariateSpline, interp2d
-from utilities.multipoles import correlation_multipoles
 
 
 class VoidGalaxyPosterior:
@@ -25,12 +24,7 @@ class VoidGalaxyPosterior:
         self.output_folder = parms.output_folder
 
         # fiducial cosmology values for converting velocities into distances
-        if parms.fiducial_omega_m + parms.fiducial_omega_l == 1:
-            # flat background case
-            cosmo = Cosmology(omega_m=parms.fiducial_omega_m)
-        else:
-            # non-flat background
-            cosmo = NonFlatBackground(omega_m=parms.fiducial_omega_m, omega_l=parms.fiducial_omega_l)
+        cosmo = cosmology.Cosmology(omega_m=parms.fiducial_omega_m, omega_l=parms.fiducial_omega_l)
         self.iaH = (1 + parms.eff_z) / cosmo.get_ez(parms.eff_z)
 
         # effective redshift
@@ -337,8 +331,8 @@ class VoidGalaxyPosterior:
 
         # and get the multipoles
         theory_multipoles = np.zeros(2 * len(s))
-        theory_multipoles[:len(s)] = correlation_multipoles(xi_model, s, ell=0)
-        theory_multipoles[len(s):] = correlation_multipoles(xi_model, s, ell=2)
+        theory_multipoles[:len(s)] = multipoles.multipoles(xi_model, s, ell=0)
+        theory_multipoles[len(s):] = multipoles.multipoles(xi_model, s, ell=2)
 
         return theory_multipoles
 
@@ -406,8 +400,8 @@ class VoidGalaxyPosterior:
 
         # and get the multipoles
         theory_multipoles = np.zeros(2 * len(s))
-        theory_multipoles[:len(s)] = correlation_multipoles(xi_model, s, ell=0)
-        theory_multipoles[len(s):] = correlation_multipoles(xi_model, s, ell=2)
+        theory_multipoles[:len(s)] = multipoles.multipoles(xi_model, s, ell=0)
+        theory_multipoles[len(s):] = multipoles.multipoles(xi_model, s, ell=2)
 
         return theory_multipoles
 
@@ -472,8 +466,8 @@ class VoidGalaxyPosterior:
 
         # and get the multipoles
         theory_multipoles = np.zeros(2 * len(s))
-        theory_multipoles[:len(s)] = correlation_multipoles(xi_model, s, ell=0)
-        theory_multipoles[len(s):] = correlation_multipoles(xi_model, s, ell=2)
+        theory_multipoles[:len(s)] = multipoles.multipoles(xi_model, s, ell=0)
+        theory_multipoles[len(s):] = multipoles.multipoles(xi_model, s, ell=2)
 
         return theory_multipoles
 
@@ -538,8 +532,8 @@ class VoidGalaxyPosterior:
 
         # and get the multipoles
         theory_multipoles = np.zeros(2 * len(s))
-        theory_multipoles[:len(s)] = correlation_multipoles(xi_model, s, ell=0)
-        theory_multipoles[len(s):] = correlation_multipoles(xi_model, s, ell=2)
+        theory_multipoles[:len(s)] = multipoles.multipoles(xi_model, s, ell=0)
+        theory_multipoles[len(s):] = multipoles.multipoles(xi_model, s, ell=2)
 
         return theory_multipoles
 

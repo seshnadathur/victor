@@ -1,0 +1,80 @@
+output: chains/test/boss_new_test
+
+likelihood:
+  likelihoods.VoidGalaxyLikelihood:
+    python_path: ./
+    spec_file: parameter_files/boss_cmass_params.yaml
+
+sampler:
+  mcmc:
+    max_samples: 100000
+    Rminus1_stop: 0.01
+
+params:
+  fsigma8:
+    prior:
+      dist: uniform
+      min: 0.05
+      max: 1.5
+    ref:
+      dist: norm
+      loc: 0.47
+      scale: 0.05
+    proposal: 0.05
+    latex: f\sigma_8
+
+  bsigma8:
+    prior:
+      dist: uniform
+      min: 0.1
+      max: 2
+    ref:
+      dist: norm
+      loc: 1.25
+      scale: 0.1
+    proposal: 0.05
+    latex: b\sigma_8
+
+  sigma_v:
+    prior:
+      dist: uniform
+      min: 100
+      max: 500
+    ref:
+      dist: norm
+      loc: 380
+      scale: 10
+    proposal: 10
+    latex: \sigma_v
+
+  aperp:
+    prior:
+      dist: uniform
+      min: 0.8
+      max: 1.2
+    ref:
+      dist: norm
+      loc: 1.0
+      scale: 0.02
+    proposal: 0.01
+    latex: \alpha_{\perp}
+
+  apar:
+    prior:
+      dist: uniform
+      min: 0.8
+      max: 1.2
+    ref:
+      dist: norm
+      loc: 1.0
+      scale: 0.02
+    proposal: 0.01
+    latex: \alpha_{||}
+
+  beta:
+    derived: "lambda fsigma8, bsigma8: fsigma8 / bsigma8"
+    latex: \beta
+
+  epsilon:
+    derived: "lambda aperp, apar: aperp / apar"
+    latex: \epsilon
