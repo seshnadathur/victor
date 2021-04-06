@@ -1,9 +1,11 @@
-output: chains/test/boss_new_test
+output: chains/boss_template_test/boss_template_test
 
 likelihood:
   likelihoods.VoidGalaxyLikelihood:
     python_path: ./
     spec_file: parameter_files/boss_cmass_params.yaml
+    settings: # leave blank to read from spec_file instead
+    paths: # leave blank to read from spec_file instead
 
 sampler:
   mcmc:
