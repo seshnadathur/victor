@@ -1,7 +1,7 @@
 import os
 import sys
 import numpy as np
-from python_tools import cosmology, multipoles, utilities
+from tools import cosmology, multipoles, utilities
 from scipy.integrate import quad
 from scipy.signal import savgol_filter
 from scipy.interpolate import InterpolatedUnivariateSpline, interp2d
