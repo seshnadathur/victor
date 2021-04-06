@@ -37,9 +37,12 @@ likelihood:
 sampler:
   mcmc:
     max_samples: 100000
-    Rminus1_stop: 0.1
-    # blocking:
-    #   - [1, []]
+    Rminus1_stop: 0.01
+    blocking:
+      - [1, [Omega_m, Omega_b, H0, sigma8]]
+      - [10, [f, bias, sigma_v, aperp, apar, b10, b01, Rp, Rx]]
+    drag: True
+    oversample_power: 0.1
 
 params:
   f:
