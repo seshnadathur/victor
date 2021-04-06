@@ -1,13 +1,18 @@
 import os
 import sys
+import functools
 import numpy as np
 import scipy.interpolate as si
 from scipy.integrate import quad
 from scipy.signal import savgol_filter
 from models import ExcursionSetProfile
-from python_tools import multipoles, cosmology, utilities
+from tools import multipoles, cosmology, utilities
 
 _spline = si.InterpolatedUnivariateSpline
+
+@functools.lru_cache(maxsize=10000)
+def get_excursion_set_model(h, om, omb, s8):
+    return ExcursionSetProfile(h, om, omb, s8)
 
 class VoidGalaxyCCF:
     """
@@ -246,9 +251,9 @@ class VoidGalaxyCCF:
         Void delta(r) profile, i.e. void-matter cross-correlation monopole
         """
 
-        beta = params.get('beta', params.get('fsigma8') / params.get('bsigma8'))
         if settings['delta_profile'] == 'use_linear_bias':
             # in this case delta(r) is just the (real-space) xi(r) divided by linear bias
+            beta = params.get('beta')
             if self.use_recon:
                 real_multipoles = self.get_interpolated_multipoles(beta, redshift=False)
             else:
@@ -263,13 +268,13 @@ class VoidGalaxyCCF:
                 if not chk in params: # parameter is missing
                     raise ValueError('Parameter %s required for delta model calculation but is not provided' % chk)
             om = params.get('Omega_m', self.fiducial_omega_m)
-            h = params.get('H0', 0.675) / 100
+            h = params.get('H0', 67.5) / 100
             s8 = params.get('sigma8', 0.81)
             omb = params.get('Omega_b', 0.048)
             deltac = params.get('delta_c', 1.686)
-            esp = ExcursionSetProfile.ExcursionSetProfile(h, om, omb, s8)
+            esp = get_excursion_set_model(h, om, omb, s8)
             x = np.linspace(0.1, np.max(r))
-            delta = esp.delta(x, params.get('b10'), params.get('b01'), params.get('Rp'), params.get('Rx'),self.effective_z, deltac=deltac)
+            delta = esp.delta(x, params.get('b10'), params.get('b01'), params.get('Rp'), params.get('Rx'), self.effective_z, deltac=deltac)
             return delta(r)
         else:
             raise ValueError('Unrecognised choice of option delta_profile')
@@ -281,9 +286,9 @@ class VoidGalaxyCCF:
         Also referred to as delta(<r) in some papers
         """
 
-        beta = params.get('beta', params.get('fsigma8') / params.get('bsigma8'))
         if settings['delta_profile'] == 'use_linear_bias':
             # in this case delta(r) is just the (real-space) xi(r) divided by linear bias
+            beta = params.get('beta')
             if self.use_recon:
                 real_multipoles = self.get_interpolated_multipoles(beta, redshift=False)
             else:
@@ -302,11 +307,11 @@ class VoidGalaxyCCF:
                 if not chk in params: # parameter is missing
                     raise ValueError('Parameter %s required for delta model calculation but is not provided' % chk)
             om = params.get('Omega_m', self.fiducial_omega_m)
-            h = params.get('H0', 0.675) / 100
+            h = params.get('H0', 67.5) / 100
             s8 = params.get('sigma8', 0.81)
             omb = params.get('Omega_b', 0.048)
             deltac = params.get('delta_c', 1.686)
-            esp = ExcursionSetProfile.ExcursionSetProfile(h, om, omb, s8)
+            esp = get_excursion_set_model(h, om, omb, s8)
             x = np.linspace(0.1, np.max(r))
             rql, rqe, model = esp.eulerian_model_profiles(x, self.effective_z, params.get('b10'), params.get('b01'),
                                                           params.get('Rp'), params.get('Rx'), deltac=deltac)
