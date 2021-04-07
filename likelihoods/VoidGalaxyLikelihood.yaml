@@ -14,6 +14,7 @@ params:
   # all parameters fixed by default: if you want to vary them, must explicitly declare in inout yaml
   fsigma8: 0.47
   bsigma8: 1.25
+  beta: 0.37
   sigma_v: 380
   aperp: 1.0
   apar: 1.0
@@ -28,11 +29,3 @@ params:
   Omega_b: 0.048
   H0: 67.5
   sigma8: 0.81
-
-  beta:
-    derived: "lambda fsigma8, bsigma8: fsigma8 / bsigma8"
-    latex: \beta
-
-  epsilon:
-    derived: "lambda aperp, apar: aperp / apar"
-    latex: \epsilon
