@@ -8,5 +8,5 @@ tools/__pycache__/
 chains/*
 md-box_data/
 old_BOSS_DR12_CMASS_data/
-cobaya_inputs/flagship_model_input.yaml
+cobaya_inputs/flagship*.yaml
 code_development.ipynb
