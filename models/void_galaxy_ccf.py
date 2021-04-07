@@ -3,7 +3,7 @@ import sys
 import functools
 import numpy as np
 import scipy.interpolate as si
-from scipy.integrate import quad
+from scipy.integrate import quad, simps
 from scipy.signal import savgol_filter
 from scipy.stats import norm
 from models import ExcursionSetProfile
