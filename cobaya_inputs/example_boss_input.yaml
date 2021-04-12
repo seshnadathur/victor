@@ -1,4 +1,4 @@
-output: chains/boss_template_test/boss_template_test
+output: chains/boss_template/boss_template
 
 likelihood:
   likelihoods.VoidGalaxyLikelihood:
