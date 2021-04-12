@@ -9,7 +9,7 @@ class ExcursionSetProfile:
     Class to calculate predicted void matter density profiles according to the model of Massara & Sheth, 1811.xxxx
     """
 
-    def __init__(self, h, omega_m, omega_b, sigma8, mnu=0.06, ns=0.965, omega_k=0, npts=200):
+    def __init__(self, h, omega_m, omega_b, mnu=0.06, ns=0.965, omega_k=0, npts=200):
         """
         Initialise instance: essentially this uses cosmo params provided to get an interpolation to the matter power spectrum
         """
@@ -30,9 +30,14 @@ class ExcursionSetProfile:
         pars.NonLinear = camb.model.NonLinear_none
         results = camb.get_results(pars)
         self.k, z, pk = results.get_matter_power_spectrum(minkh=1e-4, maxkh=2, npoints=npts)
-        s8_fid = np.array(results.get_sigma8())
-        self.normalisation = sigma8 / s8_fid
+        self.s8_fid = np.array(results.get_sigma8())
         self.pk = camb.get_matter_power_interpolator(pars, nonlinear=False)
+
+    def set_normalisation(self, sigma8):
+        """
+        Set the normalisation of the power spectrum amplitude
+        """
+        self.normalisation = sigma8 / self.s8_fid
 
     def window_tophat(self, k, R):
         """

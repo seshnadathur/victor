@@ -12,8 +12,8 @@ from tools import multipoles, cosmology, utilities
 _spline = si.InterpolatedUnivariateSpline
 
 @functools.lru_cache(maxsize=10000)
-def get_excursion_set_model(h, om, omb, s8):
-    return ExcursionSetProfile(h, om, omb, s8)
+def get_excursion_set_model(h, om, omb, mnu, ns, omk):
+    return ExcursionSetProfile(h, om, omb, mnu=mnu, ns=ns, omega_k=omk)
 
 class VoidGalaxyCCF:
     """
@@ -36,7 +36,7 @@ class VoidGalaxyCCF:
         self.iaH = (1 + self.effective_z) / cosmo.get_ez(self.effective_z)
 
         # was reconstruction used or not?
-        self.use_recon = settings['data_uses_reconstruction']
+        self.use_recon = settings.get('data_uses_reconstruction', True)
         # If reconstruction was used, the redshift-space data vector depends on beta=f/b. Normally, so does the
         # real-space input. We assume they have been measured at several different values of beta and read in the
         # grid of beta values separately. The covariance matrix also depends on beta, and can be provided on a beta
@@ -44,23 +44,19 @@ class VoidGalaxyCCF:
         # real-space input and the covariance matrix are provided to enable specific testing scenarios. If no
         # reconstruction was used, there is no beta dependence of any of these quantities.
         if self.use_recon:
-            self.fixed_covmat = settings['fixed_covmat'] if 'fixed_covmat' in settings else False
-            self.fixed_real_input = settings['fixed_real_input'] if 'fixed_real_input' in settings else False
+            self.fixed_covmat = settings.get('fixed_covmat', False)
+            self.fixed_real_input = settings.get('fixed_real_input', False)
             filename = paths['multipole_beta_grid_file']
             if filename.endswith('.npy'):
                 self.beta_grid = np.load(filename, allow_pickle=True)
             else:
                 self.beta_grid = np.loadtxt(filename)
-            if 'covmat_beta_grid_file' in paths:
-                filename = paths['covmat_beta_grid_file']
-                if filename.endswith('.npy'):
-                    self.covmat_beta_grid = np.load(filename, allow_pickle=True)
-                else:
-                    self.covmat_beta_grid = np.loadtxt(filename)
+            filename = paths.get('covmat_beta_grid_file', paths['multipole_beta_grid_file'])
+            if filename.endswith('.npy'):
+                self.covmat_beta_grid = np.load(filename, allow_pickle=True)
             else:
-                # if separate grid is not provided for the covariance, assume it is the same as above
-                self.covmat_beta_grid = self.beta_grid
-
+                self.covmat_beta_grid = np.loadtxt(filename)
+            
         # ---- load the real-space input from file ----- #
         real_multipole_data = np.load(paths['realspace_multipole_file'], allow_pickle=True).item()
         # failsafe check for how the dict keys are named in this file
@@ -273,7 +269,11 @@ class VoidGalaxyCCF:
             s8 = params.get('sigma8', 0.81)
             omb = params.get('Omega_b', 0.048)
             deltac = params.get('delta_c', 1.686)
-            esp = get_excursion_set_model(h, om, omb, s8)
+            ns = params.get('ns', 0.96)
+            mnu = params.get('mnu', 0.06)
+            omk = params.get('Omega_k', 0)
+            esp = get_excursion_set_model(h, om, omb, mnu, ns, omk)
+            esp.set_normalisation(s8)
             x = np.linspace(0.1, np.max(r))
             delta = esp.delta(x, params.get('b10'), params.get('b01'), params.get('Rp'), params.get('Rx'), self.effective_z, deltac=deltac)
             return delta(r)
@@ -312,7 +312,11 @@ class VoidGalaxyCCF:
             s8 = params.get('sigma8', 0.81)
             omb = params.get('Omega_b', 0.048)
             deltac = params.get('delta_c', 1.686)
-            esp = get_excursion_set_model(h, om, omb, s8)
+            ns = params.get('ns', 0.96)
+            mnu = params.get('mnu', 0.06)
+            omk = params.get('Omega_k', 0)
+            esp = get_excursion_set_model(h, om, omb, mnu, ns, omk)
+            esp.set_normalisation(s8)
             x = np.linspace(0.1, np.max(r))
             rql, rqe, model = esp.eulerian_model_profiles(x, self.effective_z, params.get('b10'), params.get('b01'),
                                                           params.get('Rp'), params.get('Rx'), deltac=deltac)
