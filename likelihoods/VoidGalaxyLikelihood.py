@@ -52,7 +52,7 @@ class VoidGalaxyLikelihood(Likelihood):
             pars.sig8_norm = self.settings['template_sigma8']
             pars.eff_z = self.settings['effective_redshift']
             pars.beta_prior_range = [0.01, 1.4]  # make it very broad for general applicability, as this will get overwritten anyway
-            if not 'Sellentin' in self.settings.likelihood_type:
+            if not 'Sellentin' in self.settings['likelihood_type']:
                 print('Sorry, the old code only allows use of the Sellentin & Heavens likelihood.')
                 if 'Hartlap' in self.settings['likelihood_type']:
                     pars.nmocks_covmat = self.settings['likelihood_type']['Hartlap']['nmocks']
