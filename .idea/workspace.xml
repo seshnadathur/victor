@@ -3,15 +3,7 @@
   <component name="ChangeListManager">
     <list default="true" id="71cc002b-9191-4b99-ae19-3e61ccabf90b" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/parameters/boss_cmass_params.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/parameters/eboss_dr16_lrg_params.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/parameters/generic_likelihood_params.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/posterior_samplers/CMASS_DR12.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/posterior_samplers/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/posterior_samplers/void_galaxy_posterior.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/utilities/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/utilities/multipoles.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/utilities/utilities.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/likelihoods/VoidGalaxyLikelihood.py" beforeDir="false" afterPath="$PROJECT_DIR$/likelihoods/VoidGalaxyLikelihood.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -99,9 +91,9 @@
     <servers />
   </component>
   <component name="WindowStateProjectService">
-    <state x="973" y="552" key="com.intellij.ide.util.TipDialog" timestamp="1617293409484">
+    <state x="973" y="552" key="com.intellij.ide.util.TipDialog" timestamp="1618243022561">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
-    <state x="973" y="552" key="com.intellij.ide.util.TipDialog/0.0.2560.1440@0.0.2560.1440" timestamp="1617293409484" />
+    <state x="973" y="552" key="com.intellij.ide.util.TipDialog/0.0.2560.1440@0.0.2560.1440" timestamp="1618243022561" />
   </component>
 </project>

@@ -63,7 +63,7 @@ class VoidGalaxyLikelihood(Likelihood):
             else:
                 self.use_old_code = False
                 pars.nmocks_covmat = self.settings['likelihood_type']['Sellentin']['nmocks']
-            self.vgfitter = VoidGalaxyPosterior(pars)
+            self.oldvgfitter = VoidGalaxyPosterior(pars)
         else:
             self.vgfitter = VoidGalaxyCCF(self.paths, self.settings)
 
@@ -73,10 +73,11 @@ class VoidGalaxyLikelihood(Likelihood):
         """
         if self.use_old_code:
             epsilon = params_values.get('aperp') / params_values.get('apar')
-            if self.vgfitter.assume_lin_bias:
+            if self.oldvgfitter.assume_lin_bias:
                 theta = [params_values.get('beta'), params_values.get('sigma_v'), epsilon]
-                return self.vgfitter.lnpost(theta)
+                return self.oldvgfitter.lnpost(theta)
             else:
                 theta = [params_values.get('fsigma8'), params_values.get('bsigma8'), params_values.get('sigma_v'), epsilon]
-                return self.vgfitter.lnpost(theta)
-        return self.vgfitter.lnlike_multipoles(params_values, self.settings)
+                return self.oldvgfitter.lnpost(theta)
+        else:
+            return self.vgfitter.lnlike_multipoles(params_values, self.settings)
