@@ -3,10 +3,27 @@ output: chains/boss_template/boss_template
 likelihood:
   likelihoods.VoidGalaxyLikelihood:
     python_path: ./
-    spec_file: parameter_files/boss_cmass_params.yaml
-    settings: # leave blank to read from spec_file instead
-    paths: # leave blank to read from spec_file instead
+    spec_file:
+    paths:
+      multipole_beta_grid_file: BOSS_DR12_CMASS_data/beta_grid_for_recon.npy
+      realspace_multipole_file: BOSS_DR12_CMASS_data/patchy_combined_recon_zobov-Voids_xi_p_multipoles_R0.50.npy
+      redshiftspace_multipole_file: BOSS_DR12_CMASS_data/cmass_combined_recon_zobov-Voids_xi_s_multipoles_R0.50.npy
+      covariance_matrix_file: BOSS_DR12_CMASS_data/patchy_combined_recon_zobov-Voids_xi_s_multipoles_covmat_R0.50.npy
+      delta_template_file: BOSS_DR12_CMASS_data/cmass_combined_recon_zobov-Voids_dm-profiles_R0.50.npy
+      velocity_dispersion_template_file: BOSS_DR12_CMASS_data/cmass_combined_recon_zobov-Voids_velocity-profiles_R0.50.npy
 
+    settings:
+      effective_redshift: 0.57
+      fiducial_omega_m: 0.31
+      fiducial_omega_l: 0.69
+      data_uses_reconstruction: True
+      delta_profile: use_template
+      template_sigma8: 0.628
+      model: dispersion
+      likelihood_type:
+        Sellentin:
+          nmocks: 1000
+          
 sampler:
   mcmc:
     max_samples: 100000
