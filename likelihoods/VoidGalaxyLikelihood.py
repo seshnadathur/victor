@@ -47,22 +47,22 @@ class VoidGalaxyLikelihood(Likelihood):
             else:
                 print('Old code can only calculate dispersion or streaming models. Setting to dispersion')
                 pars.theory_model = 1
-            pars.fiducial_omega_m = self.settings.fiducial_omega_m
-            pars.fiducial_omega_l = self.settings.fiducial_omega_l
-            pars.sig8_norm = self.settings.template_sigma8
-            pars.eff_z = self.settings.effective_redshift
+            pars.fiducial_omega_m = self.settings['fiducial_omega_m']
+            pars.fiducial_omega_l = self.settings['fiducial_omega_l']
+            pars.sig8_norm = self.settings['template_sigma8']
+            pars.eff_z = self.settings['effective_redshift']
             pars.beta_prior_range = [0.01, 1.4]  # make it very broad for general applicability, as this will get overwritten anyway
             if not 'Sellentin' in self.settings.likelihood_type:
                 print('Sorry, the old code only allows use of the Sellentin & Heavens likelihood.')
-                if 'Hartlap' in self.settings.likelihood_type:
-                    pars.nmocks_covmat = self.settings.likelihood_type.Hartlap.nmocks
+                if 'Hartlap' in self.settings['likelihood_type']:
+                    pars.nmocks_covmat = self.settings['likelihood_type']['Hartlap']['nmocks']
                     print('Proceeding anyway, but results may differ compared to Harltap correction')
-                elif 'Gaussian' in self.settings.likelihood_type:
+                elif 'Gaussian' in self.settings['likelihood_type']:
                     pars.nmocks_covmat = 100000
                     print('Artificially setting num_mocks = 1e5 to approximately reproduce Gaussian likelihood')
             else:
                 self.use_old_code = False
-                pars.nmocks_covmat = self.settings.likelihood_type.Sellentin.nmocks
+                pars.nmocks_covmat = self.settings['likelihood_type']['Sellentin']['nmocks']
             self.vgfitter = VoidGalaxyPosterior(pars)
         else:
             self.vgfitter = VoidGalaxyCCF(self.paths, self.settings)
