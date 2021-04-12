@@ -65,8 +65,8 @@ class VoidGalaxyLikelihood(Likelihood):
                 self.use_old_code = False
                 pars.nmocks_covmat = self.settings['likelihood_type']['Sellentin']['nmocks']
             self.oldvgfitter = VoidGalaxyPosterior(pars)
-        else:
-            self.vgfitter = VoidGalaxyCCF(self.paths, self.settings)
+        
+        self.vgfitter = VoidGalaxyCCF(self.paths, self.settings)
 
     def logp(self, **params_values):
         """
