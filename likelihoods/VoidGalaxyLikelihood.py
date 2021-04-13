@@ -57,7 +57,7 @@ class VoidGalaxyLikelihood(Likelihood):
                 print('Sorry, the old code only allows use of the Sellentin & Heavens likelihood.')
                 if 'Hartlap' in self.settings['likelihood_type']:
                     pars.nmocks_covmat = self.settings['likelihood_type']['Hartlap']['nmocks']
-                    print('Proceeding anyway, but results may differ compared to Harltap correction')
+                    print('Proceeding anyway, but results may differ compared to Hartlap correction')
                 elif 'Gaussian' in self.settings['likelihood_type']:
                     pars.nmocks_covmat = 100000
                     print('Artificially setting num_mocks = 1e5 to approximately reproduce Gaussian likelihood')
@@ -65,7 +65,7 @@ class VoidGalaxyLikelihood(Likelihood):
                 self.use_old_code = False
                 pars.nmocks_covmat = self.settings['likelihood_type']['Sellentin']['nmocks']
             self.oldvgfitter = VoidGalaxyPosterior(pars)
-        
+
         self.vgfitter = VoidGalaxyCCF(self.paths, self.settings)
 
     def logp(self, **params_values):
@@ -76,9 +76,9 @@ class VoidGalaxyLikelihood(Likelihood):
             epsilon = params_values.get('aperp') / params_values.get('apar')
             if self.oldvgfitter.assume_lin_bias:
                 theta = [params_values.get('beta'), params_values.get('sigma_v'), epsilon]
-                return self.oldvgfitter.lnpost(theta)
+                return self.oldvgfitter.lnlike(theta)
             else:
                 theta = [params_values.get('fsigma8'), params_values.get('bsigma8'), params_values.get('sigma_v'), epsilon]
-                return self.oldvgfitter.lnpost(theta)
+                return self.oldvgfitter.lnlike(theta)
         else:
             return self.vgfitter.lnlike_multipoles(params_values, self.settings)

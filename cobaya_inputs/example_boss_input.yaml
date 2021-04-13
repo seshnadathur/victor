@@ -23,7 +23,7 @@ likelihood:
       likelihood_type:
         Sellentin:
           nmocks: 1000
-          
+
 sampler:
   mcmc:
     max_samples: 100000
