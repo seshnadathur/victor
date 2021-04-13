@@ -61,13 +61,11 @@ class VoidGalaxyLikelihood(Likelihood):
                     pars.nmocks_covmat = 100000
                     print('Artificially setting num_mocks = 1e5 to approximately reproduce Gaussian likelihood')
             else:
-                self.use_old_code = False
                 pars.nmocks_covmat = self.settings['likelihood_type']['Sellentin']['nmocks']
             self.oldvgfitter = VoidGalaxyPosterior(pars)
 
         self.vgfitter = VoidGalaxyCCF(self.paths, self.settings)
-        print(f'Use old code: {self.use_old_code}')
-
+        
     def logp(self, **params_values):
         """
 
