@@ -21,8 +21,8 @@ class VoidGalaxyLikelihood(Likelihood):
                 raise KeyError('If settings and paths not provided in input yaml, spec_file must point to valid file with this info')
 
         # hacked wrapper to allow backwards compatibility with older code implementation
-        if self.settings.get('use_old_code', False):
-            self.use_old_code = True
+        self.use_old_code = self.settings.get('use_old_code', False)
+        if self.use_old_code:
             # this step is just to get the module object in the format required by the old code
             # we then rewrite the attribute values by hand for back-compatibility
             spec = spec_from_file_location("name", 'parameter_files/boss_cmass_params.py')
@@ -65,7 +65,7 @@ class VoidGalaxyLikelihood(Likelihood):
             self.oldvgfitter = VoidGalaxyPosterior(pars)
 
         self.vgfitter = VoidGalaxyCCF(self.paths, self.settings)
-        
+
     def logp(self, **params_values):
         """
 
