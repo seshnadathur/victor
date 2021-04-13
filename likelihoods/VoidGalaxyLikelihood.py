@@ -23,7 +23,6 @@ class VoidGalaxyLikelihood(Likelihood):
         # hacked wrapper to allow backwards compatibility with older code implementation
         if self.settings.get('use_old_code', False):
             self.use_old_code = True
-            print(f'Use old code: {self.use_old_code}')
             # this step is just to get the module object in the format required by the old code
             # we then rewrite the attribute values by hand for back-compatibility
             spec = spec_from_file_location("name", 'parameter_files/boss_cmass_params.py')
@@ -67,6 +66,7 @@ class VoidGalaxyLikelihood(Likelihood):
             self.oldvgfitter = VoidGalaxyPosterior(pars)
 
         self.vgfitter = VoidGalaxyCCF(self.paths, self.settings)
+        print(f'Use old code: {self.use_old_code}')
 
     def logp(self, **params_values):
         """
