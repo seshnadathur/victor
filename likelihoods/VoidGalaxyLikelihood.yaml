@@ -11,13 +11,15 @@ paths:  # left blank because these are read instead from spec_file above
 speed: 5
 
 params:
-  # all parameters fixed by default: if you want to vary them, must explicitly declare in inout yaml
-  fsigma8: 0.47
-  bsigma8: 1.25
-  beta: 0.37
-  sigma_v: 380
-  aperp: 1.0
-  apar: 1.0
+  # these parameters are simply mentioned here, you MUST define them as sampled/derived/fixed in the input yaml
+  fsigma8:
+  bsigma8:
+  beta:
+  sigma_v:
+  aperp:
+  apar: 
+
+  # these parameters are fixed by default
   bias: 2.0
   f: 0.76
   delta_c: 1.686
