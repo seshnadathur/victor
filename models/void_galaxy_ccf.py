@@ -56,7 +56,7 @@ class VoidGalaxyCCF:
                 self.covmat_beta_grid = np.load(filename, allow_pickle=True)
             else:
                 self.covmat_beta_grid = np.loadtxt(filename)
-            
+
         # ---- load the real-space input from file ----- #
         real_multipole_data = np.load(paths['realspace_multipole_file'], allow_pickle=True).item()
         # failsafe check for how the dict keys are named in this file
@@ -250,7 +250,11 @@ class VoidGalaxyCCF:
 
         if settings['delta_profile'] == 'use_linear_bias':
             # in this case delta(r) is just the (real-space) xi(r) divided by linear bias
-            beta = params.get('beta')
+            # also in this case beta has to be a sampled parameter
+            if 'beta' in params:
+                beta = params['beta']
+            else:
+                raise ValueError('If use_linear_bias is True, beta must be a sampled parameter')
             if self.use_recon:
                 real_multipoles = self.get_interpolated_multipoles(beta, redshift=False)
             else:
@@ -289,7 +293,11 @@ class VoidGalaxyCCF:
 
         if settings['delta_profile'] == 'use_linear_bias':
             # in this case delta(r) is just the (real-space) xi(r) divided by linear bias
-            beta = params.get('beta')
+            # also in this case beta has to be a sampled parameter
+            if 'beta' in params:
+                beta = params['beta']
+            else:
+                raise ValueError('If use_linear_bias is True, beta must be a sampled parameter')
             if self.use_recon:
                 real_multipoles = self.get_interpolated_multipoles(beta, redshift=False)
             else:
@@ -338,28 +346,22 @@ class VoidGalaxyCCF:
             # so its value is irrelevant for RSD (though useful for delta itself)
             if 'beta' in params:
                 beta = params.get('beta')
-                growth_term = beta / params.get('bias', 2.0)
+                growth_term = beta / params.get('bias', 2.0)  # bias value is irrelevant, will cancel out
             else:
                 raise ValueError('Using linear bias option for delta(r) requires input parameter beta')
         elif settings['delta_profile'] == 'use_template':
-            # in this case, we assume that the template scales linearly with sigma_8
-            # therefore input parameters must be fsigma8 and bsigma8, from which beta=f/b is derived
-            # also need to specify the reference sigma_8 value at which the template was generated
-            for chk in ['fsigma8', 'bsigma8']:
-                if not chk in params:
-                    raise ValueError(f'Parameter {chk} required to use delta template but is not provided')
-            beta = params['fsigma8'] / params['bsigma8']
+            # we might either sample in (fsigma8, beta) or (fsigma8, bsigma8)
+            # the line below allows for either possibility
+            beta = params.get('beta', params.get('fsigma8') / params.get('bsigma8'))
+            # as we scale the template amplitude, the value of sigma8 at which the template was calculated
+            # must also be provided
             if not 'template_sigma8' in settings:
                 raise ValueError('template_sigma8 must be provided in settings to use delta template')
             growth_term = params['fsigma8'] / settings['template_sigma8']
         elif settings['delta_profile'] == 'use_excursion_model':
-            # in this case, we will calculate the exact model delta using sigma_8 as a parameter
-            # therefore we use the linear growth rate f and galaxy bias b directly
-            for chk in ['f', 'bias']:
-                if not chk in params:
-                    raise ValueError(f'Parameter {chk} required to use delta model but is not provided')
+            # in this case, we might either sample in (f, bias) or (f, beta)
+            beta = parsm.get('beta', params.get('f') / params.get('bias'))
             growth_term = params['f']
-            beta = params['f'] / params['bias']
         else:
             raise ValueError('Unrecognised choice of option delta_profile')
         # NOTE: definition of growth_term above depends on the choice of how the delta(r) profile is obtained
