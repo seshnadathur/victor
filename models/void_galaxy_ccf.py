@@ -351,17 +351,26 @@ class VoidGalaxyCCF:
                 raise ValueError('Using linear bias option for delta(r) requires input parameter beta')
         elif settings['delta_profile'] == 'use_template':
             # we might either sample in (fsigma8, beta) or (fsigma8, bsigma8)
-            # the line below allows for either possibility
-            beta = params.get('beta', params.get('fsigma8') / params.get('bsigma8'))
+            if 'beta' in params:
+                beta = params.get('beta')
+            elif 'bsigma8' in params:
+                beta = params.get('fsigma8') / params.get('bsigma8')
+            else:
+                raise ValueError('Either beta or bsigma8 has to be provided')
             # as we scale the template amplitude, the value of sigma8 at which the template was calculated
             # must also be provided
             if not 'template_sigma8' in settings:
                 raise ValueError('template_sigma8 must be provided in settings to use delta template')
             growth_term = params['fsigma8'] / settings['template_sigma8']
         elif settings['delta_profile'] == 'use_excursion_model':
-            # in this case, we might either sample in (f, bias) or (f, beta)
-            beta = parsm.get('beta', params.get('f') / params.get('bias'))
-            growth_term = params['f']
+            # we might either sample in (fsigma8, beta) or (fsigma8, bsigma8)
+            if 'beta' in params:
+                beta = params.get('beta')
+            elif 'bias' in params:
+                beta = params.get('f') / params.get('bias')
+            else:
+                raise ValueError('Either beta or bias has to be provided')
+                growth_term = params['f']
         else:
             raise ValueError('Unrecognised choice of option delta_profile')
         # NOTE: definition of growth_term above depends on the choice of how the delta(r) profile is obtained
