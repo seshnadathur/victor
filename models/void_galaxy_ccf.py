@@ -370,7 +370,7 @@ class VoidGalaxyCCF:
                 beta = params.get('f') / params.get('bias')
             else:
                 raise ValueError('Either beta or bias has to be provided')
-                growth_term = params['f']
+            growth_term = params['f']
         else:
             raise ValueError('Unrecognised choice of option delta_profile')
         # NOTE: definition of growth_term above depends on the choice of how the delta(r) profile is obtained
