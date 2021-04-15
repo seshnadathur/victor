@@ -346,7 +346,7 @@ class VoidGalaxyCCF:
             # so its value is irrelevant for RSD (though useful for delta itself)
             if 'beta' in params:
                 beta = params.get('beta')
-                growth_term = beta / params.get('bias', 2.0)  # bias value is irrelevant, will cancel out
+                growth_term = beta * params.get('bias', 2.0)  # bias value is irrelevant, will cancel out
             else:
                 raise ValueError('Using linear bias option for delta(r) requires input parameter beta')
         elif settings['delta_profile'] == 'use_template':
