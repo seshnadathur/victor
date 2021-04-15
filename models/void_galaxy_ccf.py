@@ -346,7 +346,7 @@ class VoidGalaxyCCF:
             # so its value is irrelevant for RSD (though useful for delta itself)
             if 'beta' in params:
                 beta = params.get('beta')
-                growth_term = beta * params.get('bias', 2.0)  
+                growth_term = beta * params.get('bias', 2.0)
             else:
                 raise ValueError('Using linear bias option for delta(r) requires input parameter beta')
         elif settings['delta_profile'] == 'use_template':
@@ -401,8 +401,7 @@ class VoidGalaxyCCF:
         if settings['model'] in ['dispersion', 'streaming']:
             # so far only coded a template approach to the dispersion profile sigma_v(r) so this is always rescaled
             rescaled_sv_norm_func = _spline(rescaled_r, self.sv_norm_func(ref_r), ext=3)
-            sv_grad = _spline(rescaled_r,
-                                                   np.gradient(rescaled_sv_norm_func(rescaled_r), rescaled_r), ext=3)
+            sv_grad = _spline(rescaled_r, np.gradient(rescaled_sv_norm_func(rescaled_r), rescaled_r), ext=3)
             sigma_v = params.get('sigma_v', 380) * params.get('apar', 1.0)
 
             y = np.linspace(-5, 5) * 500 * self.iaH  # use 5x and 500 to make sure range is wide enough in all cases
