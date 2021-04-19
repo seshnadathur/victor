@@ -11,17 +11,23 @@ paths:  # left blank because these are read instead from spec_file above
 speed: 5
 
 params:
-  # these parameters are simply mentioned here, you MUST define them as sampled/derived/fixed in the input yaml
+  # there are multiple possible combinations of parameters that might be used by the likelihood depending on
+  # the settings and the model chosen; here all parameters are mentioned but the values of several of them are
+  # deliberately left undefined in order to avoid inadvertently fixing them for a run where it might cause undetected
+  # problems
+  # For these undefined parameters, if you want to run a Cobaya chain you must define them (as sampled/derived/fixed)
+  # in the input yaml. Even if you are not using them in some run, it is better to define them in the input yaml and
+  # fix them to some arbitrary value anyway, otherwise GetDist will complain when processing the chain outputs.
   fsigma8:
   bsigma8:
   beta:
   sigma_v:
   aperp:
-  apar: 
+  apar:
+  f:
+  bias:
 
   # these parameters are fixed by default
-  bias: 2.0
-  f: 0.76
   delta_c: 1.686
   b10: -1.544
   b01: -4.228
