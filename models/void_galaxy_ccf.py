@@ -90,44 +90,62 @@ class VoidGalaxyCCF:
             # determine how many multipoles we are using
             self.real_multipole_number = int(len(self.multipoles_real) / self.nrbins)
 
-        # ---- load the redshift-space data vector from file ---- #
-        red_multipole_data = np.load(paths['redshiftspace_multipole_file'], allow_pickle=True).item()
-        # failsafe check for how the dict keys are named in this file
-        got_it = False
-        for poss in ['s', 's_for_xi', 'svals', 'rvals', 'r', 'r_for_xi']:
-            if poss in red_multipole_data:
-                self.s_for_xi = red_multipole_data[poss]
-                self.nsbins = len(self.s_for_xi)
-                got_it = True
-                pass
-        if not got_it: raise ValueError('Could not find distance info in file %s. Aborting' % paths['redshiftspace_multipole_file'])
-        if 'multipoles' in red_multipole_data:
-            self.multipoles_redshift = red_multipole_data['multipoles']
-        else:
-            raise ValueError('Could not find x-corr multipole info in file %s. Aborting' % paths['redshiftspace_multipole_file'])
-        if self.use_recon:
-            # check the data loaded makes sense
-            if not self.multipoles_redshift.shape[0] == len(self.beta_grid):
-                sys.exit('use_recon=True but redshift-space data does not match length of beta grid provided. Aborting')
-            if not self.multipoles_redshift.shape[1] % self.nsbins == 0:
-                sys.exit('Binning mismatch in redshift space multipole data. Aborting')
-            # determine how many multipoles we are using
-            self.multipole_number = int(self.multipoles_redshift.shape[1] / self.nsbins)
-        else:
-            # check the loaded data makes sense
-            if not len(self.multipoles_redshift) % self.nsbins == 0:
-                sys.exit('Binning mismatch in redshift space multipole data. Aborting')
-            # determine how many multipoles we are using
-            self.multipole_number = int(len(self.multipoles_redshift) / self.nsbins)
+        # check whether a fit to data is desired or not
+        self.fit_to_data = settings.get('fit_to_data', True)
+        # If fit_to_data is False, redshift-space data vector and covariance matrix information is not loaded, and
+        # need not be provided. This allows the user to simply use this class to calculate theory model predictions
+        # even in the absence of data (which can be costly to obtain). NOTE: however, a real-space void-galaxy
+        # correlation MUST be provided (as we can't calculate the theory without this)
 
-        # ---- load the covariance matrix from file ---- #
-        self.covmat = np.load(paths['covariance_matrix_file'])
-        num_entries = int(self.multipole_number * self.nsbins)
-        if self.use_recon and not self.fixed_covmat:
-            assert self.covmat.shape == ((len(self.covmat_beta_grid), num_entries, num_entries)), 'Unexpected shape of covariance matrix'
+        if self.fit_to_data:
+            # ---- load the redshift-space data vector from file ---- #
+            if not os.access(paths['redshiftspace_multipole_file'], os.F_OK):
+                raise ValueError(f"File {paths['redshiftspace_multipole_file']} required for data fit, but not found.")
+            red_multipole_data = np.load(paths['redshiftspace_multipole_file'], allow_pickle=True).item()
+            # failsafe check for how the dict keys are named in this file
+            got_it = False
+            for poss in ['s', 's_for_xi', 'svals', 'rvals', 'r', 'r_for_xi']:
+                if poss in red_multipole_data:
+                    self.s_for_xi = red_multipole_data[poss]
+                    self.nsbins = len(self.s_for_xi)
+                    got_it = True
+                    pass
+            if not got_it: raise ValueError(f"Could not find distance info in file {paths['redshiftspace_multipole_file']}. Aborting")
+            if 'multipoles' in red_multipole_data:
+                self.multipoles_redshift = red_multipole_data['multipoles']
+            else:
+                raise ValueError(f"Could not find x-corr multipole info in file {paths['redshiftspace_multipole_file']}. Aborting")
+            if self.use_recon:
+                # check the data loaded makes sense
+                if not self.multipoles_redshift.shape[0] == len(self.beta_grid):
+                    sys.exit('use_recon=True but redshift-space data does not match length of beta grid provided. Aborting')
+                if not self.multipoles_redshift.shape[1] % self.nsbins == 0:
+                    sys.exit('Binning mismatch in redshift space multipole data. Aborting')
+                # determine how many multipoles we are using
+                self.multipole_number = int(self.multipoles_redshift.shape[1] / self.nsbins)
+            else:
+                # check the loaded data makes sense
+                if not len(self.multipoles_redshift) % self.nsbins == 0:
+                    sys.exit('Binning mismatch in redshift space multipole data. Aborting')
+                # determine how many multipoles we are using
+                self.multipole_number = int(len(self.multipoles_redshift) / self.nsbins)
+
+            # ---- load the covariance matrix from file ---- #
+            if not os.access(paths['covariance_matrix_file'], os.F_OK):
+                raise ValueError(f"File {paths['covariance_matrix_file']} required for data fit, but not found.")
+            self.covmat = np.load(paths['covariance_matrix_file'])
+            num_entries = int(self.multipole_number * self.nsbins)
+            if self.use_recon and not self.fixed_covmat:
+                assert self.covmat.shape == ((len(self.covmat_beta_grid), num_entries, num_entries)), 'Unexpected shape of covariance matrix'
+            else:
+                assert self.covmat.shape == ((num_entries, num_entries)), 'Unexpected shape of covariance matrix'
+            self.icovmat = np.linalg.inv(self.covmat)
         else:
-            assert self.covmat.shape == ((num_entries, num_entries)), 'Unexpected shape of covariance matrix'
-        self.icovmat = np.linalg.inv(self.covmat)
+            print('fit_to_data is False, so not loading redshift-space data or covariance matrix')
+            # set the following to avoid errors in subsequent calls
+            self.s_for_xi = self.r_for_xi
+            self.multipole_number = self.real_multipole_number
+            self.nsbins = self.nrbins
 
         # ---- check if a template file is provided for delta, load info if it is ---- #
         if 'delta_template_file' in paths:
@@ -542,81 +560,89 @@ class VoidGalaxyCCF:
         in the log likelihood step)
         """
 
-        # get the theory
-        monopole, quadrupole, hexadecapole = self.theory_multipoles(self.s_for_xi, params, settings)
-        if self.multipole_number == 1:
-            theoryvec = monopole
-        elif self.multipole_number == 2:
-            theoryvec = np.hstack([monopole, quadrupole])
-        else:  # hard coded maximum of l=0,2,4
-            theoryvec = np.hstack([monopole, quadrupole, hexadecapole])
+        if self.fit_to_data:
+            # get the theory
+            monopole, quadrupole, hexadecapole = self.theory_multipoles(self.s_for_xi, params, settings)
+            if self.multipole_number == 1:
+                theoryvec = monopole
+            elif self.multipole_number == 2:
+                theoryvec = np.hstack([monopole, quadrupole])
+            else:  # hard coded maximum of l=0,2,4
+                theoryvec = np.hstack([monopole, quadrupole, hexadecapole])
 
-        # now get the data vector and inverse covariance matrix
-        if 'beta' in params:
-            beta = params['beta']
-        elif 'fsigma8' in params:
-            if 'bsigma8' in params:
-                beta = params['fsigma8'] / params['bsigma8']
+            # now get the data vector and inverse covariance matrix
+            if 'beta' in params:
+                beta = params['beta']
+            elif 'fsigma8' in params:
+                if 'bsigma8' in params:
+                    beta = params['fsigma8'] / params['bsigma8']
+                else:
+                    raise ValueError('Missing necessary input parameters')
+            elif 'f' in params:
+                if 'bias' in params:
+                    beta = params['f'] / params['bias']
+                else:
+                    raise ValueError('Missing necessary input parameters')
             else:
                 raise ValueError('Missing necessary input parameters')
-        elif 'f' in params:
-            if 'bias' in params:
-                beta = params['f'] / params['bias']
+            if self.use_recon:
+                datavec = self.get_interpolated_multipoles(beta, redshift=True)
             else:
-                raise ValueError('Missing necessary input parameters')
-        else:
-            raise ValueError('Missing necessary input parameters')
-        if self.use_recon:
-            datavec = self.get_interpolated_multipoles(beta, redshift=True)
-        else:
-            datavec = self.multipoles_redshift
-        if self.use_recon and not self.fixed_covmat:
-            cov = self.get_interpolated_covmat(beta)
-            icov = self.get_interpolated_precision(beta)
-        else:
-            cov = self.covmat
-            icov = self.icovmat
+                datavec = self.multipoles_redshift
+            if self.use_recon and not self.fixed_covmat:
+                cov = self.get_interpolated_covmat(beta)
+                icov = self.get_interpolated_precision(beta)
+            else:
+                cov = self.covmat
+                icov = self.icovmat
 
-        # calculate the chi square and covariance matrix
-        return np.dot(np.dot(theoryvec - datavec, icov), theoryvec - datavec), cov
+            # calculate the chi square and covariance matrix
+            return np.dot(np.dot(theoryvec - datavec, icov), theoryvec - datavec), cov
+        else:
+            print('fit_to_data is False, cannot calculate chi-squared?!')
+            return 0, 0
 
     def lnlike_multipoles(self, params, settings):
         """
         Log likelihood function (for case of compression to Legendre multipoles)
         """
 
-        # first just get the chi-square value
-        chisq, cov = self.chi_squared_multipoles(params, settings)
+        if self.fit_to_data:
+            # first just get the chi-square value
+            chisq, cov = self.chi_squared_multipoles(params, settings)
 
-        # now apply appropriate conversion to get the log likelihood from this
-        like_factor = 0
-        if not self.fixed_covmat:
-            # covariance matrix itself varies with beta, so need to normalise for change
-            determinant = np.linalg.slogdet(cov)
-            if not determinant[0] == 1:
-                # something has gone dramatically wrong!
-                return -np.inf
-            like_factor = -0.5 * determinant[1]
-        if 'Sellentin' in settings['likelihood_type']:
-            # use the approach of Sellentin & Heavens 2016 to correctly propagate the uncertainty in the
-            # covariance matrix estimation to the likelihood
-            nmocks = settings['likelihood_type']['Sellentin']['nmocks']
-            lnlike = -nmocks * np.log(1 +  chisq / (nmocks - 1)) / 2 + like_factor
-        elif 'Hartlap' in settings['likelihood_type']:
-            # use the Hartlap correction factor to approximately account for uncertainty in estimation of
-            # the covariance matrix
-            p = self.multipole_number * self.nrbins  # number of bins in data vector
-            nmocks = settings['likelihood_type']['Hartlap']['nmocks']
-            a = (nmocks - p - 2) / (nmocks - 1)
-            lnlike = -0.5 * chisq * a + like_factor
+            # now apply appropriate conversion to get the log likelihood from this
+            like_factor = 0
+            if not self.fixed_covmat:
+                # covariance matrix itself varies with beta, so need to normalise for change
+                determinant = np.linalg.slogdet(cov)
+                if not determinant[0] == 1:
+                    # something has gone dramatically wrong!
+                    return -np.inf
+                like_factor = -0.5 * determinant[1]
+            if 'Sellentin' in settings['likelihood_type']:
+                # use the approach of Sellentin & Heavens 2016 to correctly propagate the uncertainty in the
+                # covariance matrix estimation to the likelihood
+                nmocks = settings['likelihood_type']['Sellentin']['nmocks']
+                lnlike = -nmocks * np.log(1 +  chisq / (nmocks - 1)) / 2 + like_factor
+            elif 'Hartlap' in settings['likelihood_type']:
+                # use the Hartlap correction factor to approximately account for uncertainty in estimation of
+                # the covariance matrix
+                p = self.multipole_number * self.nrbins  # number of bins in data vector
+                nmocks = settings['likelihood_type']['Hartlap']['nmocks']
+                a = (nmocks - p - 2) / (nmocks - 1)
+                lnlike = -0.5 * chisq * a + like_factor
+            else:
+                # not applying any correction – if your covariance matrix is estimated this is wrong!
+                lnlike = -0.5 * chisq + like_factor
+
+            # add a check to catch cases which fail due to unforeseen errors (e.g. -ve chisq, ...)
+            if np.isnan(lnlike):
+                print(f'Likelihood evaluation failed. Parameters at fail point: {params}')
+                print(f'Chisq: {chisq}, like_factor: {like_factor}')
+                lnlike = -np.inf
         else:
-            # not applying any correction – if your covariance matrix is estimated this is wrong!
-            lnlike = -0.5 * chisq + like_factor
-
-        # add a check to catch cases which fail due to unforeseen errors (e.g. -ve chisq, ...)
-        if np.isnan(lnlike):
-            print(f'Likelihood evaluation failed. Parameters at fail point: {params}')
-            print(f'Chisq: {chisq}, like_factor: {like_factor}')
-            lnlike = -np.inf
+            print('fit_to_data is False, cannot calculate lnlike?!')
+            lnlike = 0
 
         return lnlike
