@@ -29,7 +29,7 @@ class ExcursionSetProfile:
         #Linear power spectrum
         pars.NonLinear = camb.model.NonLinear_none
         results = camb.get_results(pars)
-        self.k, z, pk = results.get_matter_power_spectrum(minkh=1e-4, maxkh=2, npoints=npts)
+        self.k = np.logspace(-4, np.log10(2), npts)
         self.s8_fid = np.array(results.get_sigma8())
         self.pk = camb.get_matter_power_interpolator(pars, nonlinear=False)
 
