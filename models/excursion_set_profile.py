@@ -9,7 +9,7 @@ class ExcursionSetProfile:
     Class to calculate predicted void matter density profiles according to the model of Massara & Sheth, 1811.xxxx
     """
 
-    def __init__(self, h, omega_m, omega_b, mnu=0.06, ns=0.965, omega_k=0, npts=200):
+    def __init__(self, h, omega_m, omega_b, z=0, mnu=0.06, ns=0.965, omega_k=0, npts=200):
         """
         Initialise instance: essentially this uses cosmo params provided to get an interpolation to the matter power spectrum
         """
@@ -24,20 +24,30 @@ class ExcursionSetProfile:
         #This function sets up CosmoMC-like settings, with one massive neutrino and helium set using BBN consistency
         pars.set_cosmology(H0=100*h, ombh2=ombh2, omch2=omch2, mnu=mnu, omk=0)
         pars.InitPower.set_params(As=2e-9, ns=ns, r=0)  # arbitrarily set amplitude as we normalise to sigma8 later
-        pars.set_matter_power(redshifts=[0.], kmax=2.0)
+        if z > 0:
+            pars.set_matter_power(redshifts=[z, 0.], kmax=2.0)
+        else:
+            pars.set_matter_power(redshifts=[0.], kmax=2.0)
 
         #Linear power spectrum
         pars.NonLinear = camb.model.NonLinear_none
         results = camb.get_results(pars)
         self.k = np.logspace(-4, np.log10(2), npts)
-        self.s8_fid = np.array(results.get_sigma8())
+        if z > 0:
+            self.s8z_fiducial, self.s80_fiducial = results.get_sigma8()
+        else:
+            self.s80_fiducial = results.get_sigma8()
+            self.s8z_fiducial = self.s80_fiducial
         self.pk = camb.get_matter_power_interpolator(pars, nonlinear=False)
 
-    def set_normalisation(self, sigma8):
+    def set_normalisation(self, sigma8, z=0):
         """
         Set the normalisation of the power spectrum amplitude
         """
-        self.normalisation = sigma8 / self.s8_fid
+        if z==0:
+            self.normalization = sigma8 / self.s80_fiducial
+        else:
+            self.normalisation = sigma8 / self.s8z_fiducial
 
     def window_tophat(self, k, R):
         """

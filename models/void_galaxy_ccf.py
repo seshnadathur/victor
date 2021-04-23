@@ -12,8 +12,8 @@ from tools import multipoles, cosmology, utilities
 _spline = si.InterpolatedUnivariateSpline
 
 @functools.lru_cache(maxsize=10000)
-def get_excursion_set_model(h, om, omb, mnu, ns, omk):
-    return ExcursionSetProfile(h, om, omb, mnu=mnu, ns=ns, omega_k=omk)
+def get_excursion_set_model(h, om, omb, mnu, ns, omk, z=0):
+    return ExcursionSetProfile(h, om, omb, z=z, mnu=mnu, ns=ns, omega_k=omk)
 
 class VoidGalaxyCCF:
     """
@@ -288,14 +288,16 @@ class VoidGalaxyCCF:
                     raise ValueError('Parameter %s required for delta model calculation but is not provided' % chk)
             om = params.get('Omega_m', self.fiducial_omega_m)
             h = params.get('H0', 67.5) / 100
-            s8 = params.get('sigma8', 0.81)
+            s80 = params.get('sigma_8_0', 0.81)
             omb = params.get('Omega_b', 0.048)
             deltac = params.get('delta_c', 1.686)
             ns = params.get('ns', 0.96)
             mnu = params.get('mnu', 0.06)
             omk = params.get('Omega_k', 0)
-            esp = get_excursion_set_model(h, om, omb, mnu, ns, omk)
-            esp.set_normalisation(s8)
+            esp = get_excursion_set_model(h, om, omb, mnu, ns, omk, self.effective_z)
+            esp.set_normalisation(s80, z=0)
+            # get the value of sigma8(z) to return as derived parameter
+            self.s8z = esp.s8z_fiducial * esp.normalization
             x = np.linspace(0.1, np.max(r))
             delta = esp.delta(x, params.get('b10'), params.get('b01'), params.get('Rp'), params.get('Rx'), self.effective_z, deltac=deltac)
             return delta(r)
@@ -335,14 +337,14 @@ class VoidGalaxyCCF:
                     raise ValueError('Parameter %s required for delta model calculation but is not provided' % chk)
             om = params.get('Omega_m', self.fiducial_omega_m)
             h = params.get('H0', 67.5) / 100
-            s8 = params.get('sigma8', 0.81)
+            s80 = params.get('sigma_8_0', 0.81)
             omb = params.get('Omega_b', 0.048)
             deltac = params.get('delta_c', 1.686)
             ns = params.get('ns', 0.96)
             mnu = params.get('mnu', 0.06)
             omk = params.get('Omega_k', 0)
-            esp = get_excursion_set_model(h, om, omb, mnu, ns, omk)
-            esp.set_normalisation(s8)
+            esp = get_excursion_set_model(h, om, omb, mnu, ns, omk, self.effective_z)
+            esp.set_normalisation(s80, z=0)
             x = np.linspace(0.1, np.max(r))
             rql, rqe, model = esp.eulerian_model_profiles(x, self.effective_z, params.get('b10'), params.get('b01'),
                                                           params.get('Rp'), params.get('Rx'), deltac=deltac)
@@ -375,7 +377,7 @@ class VoidGalaxyCCF:
                 beta = params.get('fsigma8') / params.get('bsigma8')
             else:
                 raise ValueError('Either beta or bsigma8 has to be provided')
-            # as we scale the template amplitude, the value of sigma8 at which the template was calculated
+            # as we scale the template amplitude, the value of sigma8(z_sim) for the simulation used to obtain the template
             # must also be provided
             if not 'template_sigma8' in settings:
                 raise ValueError('template_sigma8 must be provided in settings to use delta template')
@@ -634,13 +636,23 @@ class VoidGalaxyCCF:
                 # not applying any correction – if your covariance matrix is estimated this is wrong!
                 lnlike = -0.5 * chisq + like_factor
 
-            # add a check to catch cases which fail due to unforeseen errors (e.g. -ve chisq, ...)
+            # add a sanity check to catch cases which fail due to unforeseen errors (e.g. -ve chisq, ...)
             if np.isnan(lnlike):
                 print(f'Likelihood evaluation failed. Parameters at fail point: {params}')
                 print(f'Chisq: {chisq}, like_factor: {like_factor}')
                 lnlike = -np.inf
+
+            # add useful derived parameters to return
+            # Cobaya assumes chisq = -2*lnlike which does not account for the like_factor above
+            # so the Cobaya in-built chisq calculation is wrong and we add the correct chisq as a
+            # derived parameter (could add further derived parameters here if necessary)
+            derived = {'chi2_correct': chisq}
+            if settings['delta_profile'] == 'use_excursion_model':
+                # input parameters are f(z) and sigma8(z=0) but fsigma8(z) is more useful
+                derived['fsigma8'] = params['f'] * self.s8z
         else:
             print('fit_to_data is False, cannot calculate lnlike?!')
             lnlike = 0
+            derived = {}
 
-        return lnlike
+        return lnlike, derived
