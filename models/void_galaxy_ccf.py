@@ -368,7 +368,7 @@ class VoidGalaxyCCF:
             else:
                 raise ValueError('Using linear bias option for delta(r) requires input parameter beta')
         elif settings['delta_profile'] == 'use_template':
-            # we might either sample in (fsigma8, beta) or (fsigma8, bsigma8)
+            # we might either sample in (fsigma8, beta) or (fsigma8, bsigma8) (latter only recommended for historical continuity)
             if 'beta' in params:
                 beta = params.get('beta')
             elif 'bsigma8' in params:
@@ -381,13 +381,11 @@ class VoidGalaxyCCF:
                 raise ValueError('template_sigma8 must be provided in settings to use delta template')
             growth_term = params['fsigma8'] / settings['template_sigma8']
         elif settings['delta_profile'] == 'use_excursion_model':
-            # we might either sample in (fsigma8, beta) or (fsigma8, bsigma8)
+            # we sample in (f, beta)
             if 'beta' in params:
                 beta = params.get('beta')
-            elif 'bias' in params:
-                beta = params.get('f') / params.get('bias')
             else:
-                raise ValueError('Either beta or bias has to be provided')
+                raise ValueError('Error: Parameter beta not provided')
             growth_term = params['f']
         else:
             raise ValueError('Unrecognised choice of option delta_profile')

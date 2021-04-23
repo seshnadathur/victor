@@ -25,7 +25,6 @@ params:
   aperp:
   apar:
   f:
-  bias:
 
   # these parameters are fixed by default
   delta_c: 1.686
@@ -37,3 +36,6 @@ params:
   Omega_b: 0.048
   H0: 67.5
   sigma8: 0.81
+  # value of bias does not affect the likelihood in any way, it is specified as part of params only so that
+  # it can be used in some additional visualisation tasks; for an MCMC run it should never be sampled over
+  bias: 2.0  
