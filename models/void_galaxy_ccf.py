@@ -360,8 +360,7 @@ class VoidGalaxyCCF:
         """
 
         beta = params.get('beta')
-        # so that we can either sample in epsilon = aperp/apar (default), or aperp and apar separately
-        epsilon = params.get('epsilon', params['aperp'] / params['apar'])
+        epsilon = params['aperp'] / params['apar']
         if settings['delta_profile'] == 'use_linear_bias':
             # the bias parameter included in growth_term cancels the same factor in defining delta
             # so its value is irrelevant for RSD (though useful for delta itself)
