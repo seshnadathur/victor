@@ -162,4 +162,5 @@ params:
 
   fsigma8:
     derived: True
+    latex: f\sigma_8
   # (other parameters are fixed by default)
