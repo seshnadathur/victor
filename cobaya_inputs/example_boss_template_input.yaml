@@ -26,8 +26,8 @@ likelihood:
 
 sampler:
   mcmc:
-    max_samples: 100
-    Rminus1_stop: 0.02
+    max_samples: 100000
+    Rminus1_stop: 0.01
     learn_proposal_Rminus1_min: 0.1
 
 params:
