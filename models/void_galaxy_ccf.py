@@ -359,41 +359,26 @@ class VoidGalaxyCCF:
         Calculates the model prediction for the anisotropic redshift-space cross-correlation xi(s, mu)
         """
 
-        epsilon = params['aperp'] / params['apar']
+        beta = params.get('beta')
+        # so that we can either sample in epsilon = aperp/apar (default), or aperp and apar separately
+        epsilon = params.get('epsilon', params['aperp'] / params['apar'])
         if settings['delta_profile'] == 'use_linear_bias':
-            # in this case, input parameter to the theory will be beta=f/b
             # the bias parameter included in growth_term cancels the same factor in defining delta
             # so its value is irrelevant for RSD (though useful for delta itself)
-            if 'beta' in params:
-                beta = params.get('beta')
-                growth_term = beta * params.get('bias', 2.0)
-            else:
-                raise ValueError('Using linear bias option for delta(r) requires input parameter beta')
+            growth_term = beta * params.get('bias', 2.0)
         elif settings['delta_profile'] == 'use_template':
-            # we might either sample in (fsigma8, beta) or (fsigma8, bsigma8) (latter only recommended for historical continuity)
-            if 'beta' in params:
-                beta = params.get('beta')
-            elif 'bsigma8' in params:
-                beta = params.get('fsigma8') / params.get('bsigma8')
-            else:
-                raise ValueError('Either beta or bsigma8 has to be provided')
-            # as we scale the template amplitude, the value of sigma8(z_sim) for the simulation used to obtain the template
-            # must also be provided
+            beta = params.get('beta')
+            # the value of sigma8(z_sim) for the simulation used to obtain the template must also be provided to scale template amplitude
             if not 'template_sigma8' in settings:
                 raise ValueError('template_sigma8 must be provided in settings to use delta template')
             growth_term = params['fsigma8'] / settings['template_sigma8']
         elif settings['delta_profile'] == 'use_excursion_model':
-            # we sample in (f, beta)
-            if 'beta' in params:
-                beta = params.get('beta')
-            else:
-                raise ValueError('Error: Parameter beta not provided')
             growth_term = params['f']
         else:
             raise ValueError('Unrecognised choice of option delta_profile')
-        # NOTE: definition of growth_term above depends on the choice of how the delta(r) profile is obtained
-        # and the parameters that are expected to be provided – it is written this way so that the code below
-        # can then use growth_term in the same way in all cases
+        # NOTE: in each case above, growth_term is defined such as to be proportional to growth rate f
+        # The proportionality factors differ with the choice of how delta(r) is to be calculated, in such a way
+        # that in the code below the growth_term factor can be used in the same way in each case
 
         if self.use_recon:
             real_multipoles = self.get_interpolated_multipoles(beta, redshift=False)
@@ -573,16 +558,6 @@ class VoidGalaxyCCF:
             # now get the data vector and inverse covariance matrix
             if 'beta' in params:
                 beta = params['beta']
-            elif 'fsigma8' in params:
-                if 'bsigma8' in params:
-                    beta = params['fsigma8'] / params['bsigma8']
-                else:
-                    raise ValueError('Missing necessary input parameters')
-            elif 'f' in params:
-                if 'bias' in params:
-                    beta = params['f'] / params['bias']
-                else:
-                    raise ValueError('Missing necessary input parameters')
             else:
                 raise ValueError('Missing necessary input parameter beta')
             if self.use_recon:
