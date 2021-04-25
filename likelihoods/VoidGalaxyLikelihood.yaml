@@ -19,7 +19,6 @@ params:
   # in the input yaml. Even if you are not using them in some run, it is better to define them in the input yaml and
   # fix them to some arbitrary value anyway, otherwise GetDist will complain when processing the chain outputs.
   fsigma8:
-  bsigma8:
   beta:
   sigma_v:
   aperp:
@@ -35,7 +34,7 @@ params:
   Omega_m: 0.31
   Omega_b: 0.048
   H0: 67.5
-  sigma8: 0.81
+  sigma_8_0: 0.81
   # value of bias does not affect the likelihood in any way, it is specified as part of params only so that
   # it can be used in some additional visualisation tasks; for an MCMC run it should never be sampled over
   bias: 2.0
