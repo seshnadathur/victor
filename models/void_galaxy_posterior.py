@@ -638,7 +638,7 @@ class VoidGalaxyPosterior:
             print('Chisq: ', chisq, ' like_factor: ', like_factor)
             lnlkl = -np.inf
 
-        return lnlkl
+        return lnlkl, chisq
 
 
     def lnprior(self, theta):

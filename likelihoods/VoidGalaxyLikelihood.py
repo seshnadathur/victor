@@ -73,14 +73,16 @@ class VoidGalaxyLikelihood(Likelihood):
             epsilon = params_values.get('aperp') / params_values.get('apar')
             if self.oldvgfitter.assume_lin_bias:
                 theta = [params_values.get('beta'), params_values.get('sigma_v'), epsilon]
-                return self.oldvgfitter.lnlike(theta)
+                lnlike, chisq = self.oldvgfitter.lnlike(theta)
             else:
                 theta = [params_values.get('fsigma8'), params_values.get('bsigma8'), params_values.get('sigma_v'), epsilon]
-                return self.oldvgfitter.lnlike(theta)
+                lnlike, chisq = self.oldvgfitter.lnlike(theta)
+            state['logp'] = lnlike
+            state['derived'] = {'chi2_VoidGalaxyLikelihood_correct': chisq}
         else:
             lnlike, chisq = self.vgfitter.lnlike_multipoles(params_values, self.settings)
             state['logp'] = lnlike
             if self.settings['delta_profile'] == 'use_excursion_model':
                 state['derived'] = {'chi2_VoidGalaxyLikelihood_correct': chisq, 'fsigma8': params_values['f'] * self.vgfitter.s8z}
             else:
-                state['derived'] = {'chi2_VoidGalaxyLikelihood_correct': chisq}            
+                state['derived'] = {'chi2_VoidGalaxyLikelihood_correct': chisq}
