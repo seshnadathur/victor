@@ -1,0 +1,165 @@
+output: chains/boss_model_fit/boss_dr12_model_fit
+
+likelihood:
+  likelihoods.VoidGalaxyLikelihood:
+    python_path: ./
+    spec_file:
+    paths:
+      multipole_beta_grid_file: BOSS_DR12_CMASS_data/beta_grid_for_recon.npy
+      realspace_multipole_file: BOSS_DR12_CMASS_data/patchy_combined_recon_zobov-Voids_xi_p_multipoles_R0.50.npy
+      redshiftspace_multipole_file: BOSS_DR12_CMASS_data/cmass_combined_recon_zobov-Voids_xi_s_multipoles_R0.50.npy
+      covariance_matrix_file: BOSS_DR12_CMASS_data/patchy_combined_recon_zobov-Voids_xi_s_multipoles_covmat_R0.50.npy
+      delta_template_file: BOSS_DR12_CMASS_data/cmass_combined_recon_zobov-Voids_dm-profiles_R0.50.npy
+      velocity_dispersion_template_file: BOSS_DR12_CMASS_data/cmass_combined_recon_zobov-Voids_velocity-profiles_R0.50.npy
+
+    settings:
+      effective_redshift: 0.57
+      fiducial_omega_m: 0.31
+      fiducial_omega_l: 0.69
+      data_uses_reconstruction: True
+      delta_profile: use_excursion_model
+      model: dispersion
+      likelihood_type:
+        Sellentin:
+          nmocks: 1000
+
+sampler:
+  mcmc:
+    max_samples: 100
+    Rminus1_stop: 0.02
+    learn_proposal_Rminus1_min: 0.1
+    # NOTE: uncomment/adapt following lines if sampling in the slow parameters Omega_m, Omega_b, H0, ns etc
+    # blocking:
+    #   - [1, [Omega_m, Omega_b, H0]]
+    #   - [10, [f, bias, sigma_v, aperp, apar, b10, b01, Rp, Rx, sigma_8_0]]
+    # drag: True
+    # oversample_power: 0.1
+
+params:
+  f:
+    prior:
+      dist: uniform
+      min: 0.1
+      max: 1.5
+    ref:
+      dist: norm
+      loc: 0.76
+      scale: 0.05
+    proposal: 0.02
+    latex: f
+
+  sigma_8_0:  # NOTE: this is sigma_8(z=0)
+    prior:
+      dist: uniform
+      min: 0.65
+      max: 0.95
+    ref:
+      dist: norm
+      loc: 0.81
+      scale: 0.02
+    proposal: 0.01
+    latex: \sigma_{8_0}
+
+  beta:
+    prior:
+      dist: uniform
+      min: 0.2
+      max: 0.6
+    ref:
+      dist: norm
+      loc: 0.4
+      scale: 0.05
+    proposal: 0.01
+    latex: \beta
+
+  sigma_v:
+    prior:
+      dist: uniform
+      min: 100
+      max: 500
+    ref:
+      dist: norm
+      loc: 380
+      scale: 10
+    proposal: 10
+    latex: \sigma_v
+
+  aperp:
+    prior:
+      dist: uniform
+      min: 0.8
+      max: 1.2
+    ref:
+      dist: norm
+      loc: 1.0
+      scale: 0.02
+    proposal: 0.01
+    latex: \alpha_{\perp}
+
+  apar:
+    prior:
+      dist: uniform
+      min: 0.8
+      max: 1.2
+    ref:
+      dist: norm
+      loc: 1.0
+      scale: 0.02
+    proposal: 0.01
+    latex: \alpha_{||}
+
+  b10:
+    prior:
+      dist: uniform
+      min: -5
+      max: 5
+    ref:
+      dist: norm
+      loc: -1.5
+      scale: 0.05
+    proposal: 0.01
+    latex: b_{10}
+
+  b01:
+    prior:
+      dist: uniform
+      min: -10
+      max: 10
+    ref:
+      dist: norm
+      loc: -4.2
+      scale: 0.05
+    proposal: 0.01
+    latex: b_{01}
+
+  Rp:
+    prior:
+      dist: uniform
+      min: 1
+      max: 25
+    ref:
+      dist: norm
+      loc: 7.97
+      scale: 0.05
+    proposal: 0.01
+    latex: R_{p}
+
+  Rx:
+    prior:
+      dist: uniform
+      min: 0
+      max: 5
+    ref:
+      dist: norm
+      loc: 0.47
+      scale: 0.02
+    proposal: 0.01
+    latex: R_{x}
+
+  epsilon:
+    derived: "lambda aperp, apar: aperp / apar"
+    latex: \epsilon
+
+  fsigma8:
+    derived: True
+  # (other parameters are fixed by default)
