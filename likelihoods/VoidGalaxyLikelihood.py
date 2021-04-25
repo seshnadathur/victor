@@ -80,6 +80,7 @@ class VoidGalaxyLikelihood(Likelihood):
         else:
             lnlike, chisq = self.vgfitter.lnlike_multipoles(params_values, self.settings)
             state['logp'] = lnlike
-            state['derived'] = {'chi2_VoidGalaxyLikelihood_correct': chisq}
             if self.settings['delta_profile'] == 'use_excursion_model':
-                state['derived'] = {'fsigma8': params_values['f'] * self.vgfitter.s8z}
+                state['derived'] = {'chi2_VoidGalaxyLikelihood_correct': chisq, 'fsigma8': params_values['f'] * self.vgfitter.s8z}
+            else:
+                state['derived'] = {'chi2_VoidGalaxyLikelihood_correct': chisq}            

@@ -297,7 +297,7 @@ class VoidGalaxyCCF:
             esp = get_excursion_set_model(h, om, omb, mnu, ns, omk, self.effective_z)
             esp.set_normalisation(s80, z=0)
             # get the value of sigma8(z) to return as derived parameter
-            self.s8z = esp.s8z_fiducial * esp.normalization
+            self.s8z = esp.s8z_fiducial * esp.normalisation
             x = np.linspace(0.1, np.max(r))
             delta = esp.delta(x, params.get('b10'), params.get('b01'), params.get('Rp'), params.get('Rx'), self.effective_z, deltac=deltac)
             return delta(r)

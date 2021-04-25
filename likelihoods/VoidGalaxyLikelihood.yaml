@@ -2,10 +2,10 @@
 # these defaults will be overwritten by options provided in the input file used
 # when invoking Cobaya
 
-# the yaml file with the full options for the given dataset
+# the default yaml file with the options for the given dataset
 spec_file: parameter_files/boss_cmass_params.yaml
-settings:  # left blank because these are read instead from spec_file above
-paths:  # left blank because these are read instead from spec_file above
+settings:
+paths:
 
 params:
   # in the simplest case of a template fit, you will want to sample over the following parameters:

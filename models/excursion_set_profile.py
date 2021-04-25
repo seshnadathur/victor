@@ -45,7 +45,7 @@ class ExcursionSetProfile:
         Set the normalisation of the power spectrum amplitude
         """
         if z==0:
-            self.normalization = sigma8 / self.s80_fiducial
+            self.normalisation = sigma8 / self.s80_fiducial
         else:
             self.normalisation = sigma8 / self.s8z_fiducial
 
