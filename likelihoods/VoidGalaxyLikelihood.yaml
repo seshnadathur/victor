@@ -7,39 +7,102 @@ spec_file: parameter_files/boss_cmass_params.yaml
 settings:  # left blank because these are read instead from spec_file above
 paths:  # left blank because these are read instead from spec_file above
 
-# Speed in evaluations/second (after theory inputs calculated).
-speed: 5
-
 params:
-  # there are multiple possible combinations of parameters that might be used by the likelihood depending on
-  # the settings and the model chosen; here all parameters are mentioned but the values of several of them are
-  # deliberately left undefined in order to avoid inadvertently fixing them for a run where it might cause undetected
-  # problems
-  # For these undefined parameters, if you want to run a Cobaya chain you must define them (as sampled/derived/fixed)
-  # in the input yaml. Even if you are not using them in some run, it is better to define them in the input yaml and
-  # fix them to some arbitrary value anyway, otherwise GetDist will complain when processing the chain outputs.
-  fsigma8:
-  beta:
-  sigma_v:
-  aperp:
-  apar:
-  f:
+  # in the simplest case of a template fit, you will want to sample over the following parameters:
+  fsigma8:  # NOTE: this is f(z)sigma_8(z), where z is the effective redshift of the sample
+    prior:
+      dist: uniform
+      min: 0.05
+      max: 1.5
+    ref:
+      dist: norm
+      loc: 0.47
+      scale: 0.05
+    proposal: 0.05
+    latex: f\sigma_8
 
-  # these parameters are fixed by default
-  delta_c: 1.686
+  beta:  # NOTE: this is f(z) / b where b is the large-scale (constant) linear galaxy bias
+    prior:
+      dist: uniform
+      min: 0.2
+      max: 0.6
+    ref:
+      dist: norm
+      loc: 0.4
+      scale: 0.05
+    proposal: 0.01
+    latex: \beta
+
+  sigma_v:
+    prior:
+      dist: uniform
+      min: 100
+      max: 500
+    ref:
+      dist: norm
+      loc: 380
+      scale: 10
+    proposal: 10
+    latex: \sigma_v
+
+  aperp:
+    prior:
+      dist: uniform
+      min: 0.8
+      max: 1.2
+    ref:
+      dist: norm
+      loc: 1.0
+      scale: 0.02
+    proposal: 0.01
+    latex: \alpha_{\perp}
+
+  apar:
+    prior:
+      dist: uniform
+      min: 0.8
+      max: 1.2
+    ref:
+      dist: norm
+      loc: 1.0
+      scale: 0.02
+    proposal: 0.01
+    latex: \alpha_{||}
+
+  # and epsilon = aperp / apar is the most useful cosmological constraint
+  epsilon:
+    derived: "lambda aperp, apar: aperp / apar"
+    latex: \epsilon
+  # for completeness, can define alpha = aperp^(2/3) * apar^(1/3), but this is not constrained by the likelihood
+  # alpha:
+  #   derived: "lambda aperp, apar: aperp**(2/3) * apar**(1/3)"
+  #   latex: \alpha
+  # NOTE: alternatively, you may want to fix alpha = 1, sample in epsilon, and define aperp and apar as derived parameters
+
+  # The following additional parameters are needed in order to use the excursion set model for void delta(r) profiles instead
+  # of the simple template fit (for simplicity they are fixed by default here):
+  # NOTE: sample in f(z) and sigma_8_0 = sigma_8(z=0) INSTEAD of sampling in fsigma8. You can then set fsigma8 to be a
+  # derived parameter, as for the chi2 shown below, to obtain values of f(z)sigma_8(z) at the relevant z in the chain
+  f: 0.778
+  sigma_8_0: 0.81
+  # four main (nuisance) parameters determining delta(r):
   b10: -1.544
   b01: -4.228
   Rp: 7.973
   Rx: 0.467
+  # cosmological parameters indirectly determining delta(r) via their effect on the matter P(k):
   Omega_m: 0.31
   Omega_b: 0.048
   H0: 67.5
-  sigma_8_0: 0.81
-  # value of bias does not affect the likelihood in any way, it is specified as part of params only so that
-  # it can be used in some additional visualisation tasks; for an MCMC run it should never be sampled over
-  bias: 2.0
+  ns: 0.96
+  # NOTE: the four cosmo params above are ~10x slower to vary than all others, so use speed blocking for fast-slow separation
+  # additional parameters not expected to vary, but defined here just to allow the possibility in the future
+  delta_c: 1.686  # would be fast
+  mnu: 0.06  # slow
+  Omega_k: 0  # slow
 
-  # Cobaya's automatically calculated chi2 is incorrect due to the form of the log likelihood used
-  # so we provide the correct chi2 as a derived parameter
+  # internally calculated derived parameters:
+  # (Cobaya's automatically calculated chi2 is generically incorrect)
   chi2_VoidGalaxyLikelihood_correct:
     derived: True
+  # (if sampling in f and sigma_8_0, set fsigma8 to be derived as above as well)
