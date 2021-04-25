@@ -38,4 +38,9 @@ params:
   sigma8: 0.81
   # value of bias does not affect the likelihood in any way, it is specified as part of params only so that
   # it can be used in some additional visualisation tasks; for an MCMC run it should never be sampled over
-  bias: 2.0  
+  bias: 2.0
+
+  # Cobaya's automatically calculated chi2 is incorrect due to the form of the log likelihood used
+  # so we provide the correct chi2 as a derived parameter
+  chi2_VoidGalaxyLikelihood_correct:
+    derived: True

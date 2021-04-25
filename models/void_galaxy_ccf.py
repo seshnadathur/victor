@@ -584,7 +584,7 @@ class VoidGalaxyCCF:
                 else:
                     raise ValueError('Missing necessary input parameters')
             else:
-                raise ValueError('Missing necessary input parameters')
+                raise ValueError('Missing necessary input parameter beta')
             if self.use_recon:
                 datavec = self.get_interpolated_multipoles(beta, redshift=True)
             else:
@@ -642,17 +642,8 @@ class VoidGalaxyCCF:
                 print(f'Chisq: {chisq}, like_factor: {like_factor}')
                 lnlike = -np.inf
 
-            # add useful derived parameters to return
-            # Cobaya assumes chisq = -2*lnlike which does not account for the like_factor above
-            # so the Cobaya in-built chisq calculation is wrong and we add the correct chisq as a
-            # derived parameter (could add further derived parameters here if necessary)
-            derived = {'chi2_correct': chisq}
-            if settings['delta_profile'] == 'use_excursion_model':
-                # input parameters are f(z) and sigma8(z=0) but fsigma8(z) is more useful
-                derived['fsigma8'] = params['f'] * self.s8z
         else:
             print('fit_to_data is False, cannot calculate lnlike?!')
             lnlike = 0
-            derived = {}
 
-        return lnlike, derived
+        return lnlike, chisq

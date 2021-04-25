@@ -66,9 +66,8 @@ class VoidGalaxyLikelihood(Likelihood):
 
         self.vgfitter = VoidGalaxyCCF(self.paths, self.settings)
 
-    def logp(self, **params_values):
+    def calculate(self, state, want_derived=True, **params_values):
         """
-
         """
         if self.use_old_code:
             epsilon = params_values.get('aperp') / params_values.get('apar')
@@ -79,4 +78,8 @@ class VoidGalaxyLikelihood(Likelihood):
                 theta = [params_values.get('fsigma8'), params_values.get('bsigma8'), params_values.get('sigma_v'), epsilon]
                 return self.oldvgfitter.lnlike(theta)
         else:
-            return self.vgfitter.lnlike_multipoles(params_values, self.settings)
+            lnlike, chisq = self.vgfitter.lnlike_multipoles(params_values, self.settings)
+            state['logp'] = lnlike
+            state['derived'] = {'chi2_VoidGalaxyLikelihood_correct': chisq}
+            if self.settings['delta_profile'] == 'use_excursion_model':
+                state['derived'] = {'fsigma8': params_values['f'] * self.vgfitter.s8z}
