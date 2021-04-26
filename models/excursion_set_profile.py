@@ -45,9 +45,9 @@ class ExcursionSetProfile:
         Set the normalisation of the power spectrum amplitude
         """
         if z==0:
-            self.normalisation = sigma8 / self.s80_fiducial
+            self.normalisation = (sigma8 / self.s80_fiducial)**2
         else:
-            self.normalisation = sigma8 / self.s8z_fiducial
+            self.normalisation = (sigma8 / self.s8z_fiducial)**2
 
     def window_tophat(self, k, R):
         """
