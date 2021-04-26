@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.integrate import quad
 from scipy import constants
+from scipy.special import hyp2f1
 
 class Cosmology:
     """
@@ -36,3 +37,13 @@ class Cosmology:
 
     def get_redshift(self, r):
         return np.interp(r, self.rtab, self.ztab)
+
+    def get_fz(self, z, gamma=0.55):
+        return ((self.omega_m * (1 + z)**3.) / (self.omega_m * (1 + z)**3 + self.omegaL))**gamma
+
+    def get_sigma8z(self, z, sigma_8_0):
+        az = 1. / (1 + z)
+        growth = az ** 2.5 * np.sqrt(self.omegaL + self.omega_m * az ** (-3.)) * \
+                      hyp2f1(5. / 6, 3. / 2, 11. / 6, -(self.omegaL * az ** 3.) / self.omega_m) / \
+                      hyp2f1(5. / 6, 3. / 2, 11. / 6, -self.omegaL / self.omega_m)
+        return sigma_8_0 * growth
