@@ -116,7 +116,7 @@ class ExcursionSetProfile:
         Extra term to Eulerian matter profile of voids arising from void motion
         """
         bv = 1 - self.k**2 * self.sj_pp(Rp, Rx, 0) / self.sj_pp(Rp, Rx, 1)
-        integrand = bv * self.window(self.k, Rp, Rx) * self.window_tophat(self.k, RqE) * self.pk.P(0, self.k) * self.k**2 / (2 * np.pi**2)
+        integrand = bv * self.window(self.k, Rp, Rx) * self.window_tophat(self.k, RqE) * self.normalisation * self.pk.P(0, self.k) * self.k**2 / (2 * np.pi**2)
         return np.trapz(integrand, self.k)
 
     def eulerian_model_profiles(self, RqL, z, b10, b01, Rp, Rx, deltac=1.686):
