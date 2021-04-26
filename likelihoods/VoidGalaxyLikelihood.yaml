@@ -105,4 +105,5 @@ params:
   # (Cobaya's automatically calculated chi2 is generically incorrect)
   chi2_VoidGalaxyLikelihood_correct:
     derived: True
+    latex: \chi^2
   # (if sampling in f and sigma_8_0, set fsigma8 to be derived as above as well)
