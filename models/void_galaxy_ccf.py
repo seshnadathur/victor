@@ -366,7 +366,6 @@ class VoidGalaxyCCF:
             # so its value is irrelevant for RSD (though useful for delta itself)
             growth_term = beta * params.get('bias', 2.0)
         elif settings['delta_profile'] == 'use_template':
-            beta = params.get('beta')
             # the value of sigma8(z_sim) for the simulation used to obtain the template must also be provided to scale template amplitude
             if not 'template_sigma8' in settings:
                 raise ValueError('template_sigma8 must be provided in settings to use delta template')
