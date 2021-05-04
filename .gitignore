@@ -9,4 +9,6 @@ chains/*
 md-box_data/
 old_BOSS_DR12_CMASS_data/
 cobaya_inputs/flagship*.yaml
+cobaya_inputs/patchy*
+cobaya_inputs/nseries*
 code_development.ipynb
