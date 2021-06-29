@@ -44,7 +44,7 @@ class VoidGalaxyCCF:
         # real-space input and the covariance matrix are provided to enable specific testing scenarios. If no
         # reconstruction was used, there is no beta dependence of any of these quantities.
         if self.use_recon:
-            self.fixed_covmat = settings.get('fixed_covmat', False)
+            self.fixed_covmat = settings.get('fixed_covmat', True)
             self.fixed_real_input = settings.get('fixed_real_input', False)
             filename = paths['multipole_beta_grid_file']
             if filename.endswith('.npy'):
