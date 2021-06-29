@@ -134,6 +134,9 @@ class ExcursionSetProfile:
         """
         RqE, model_1halo = self.eulerian_1halo(RqL, z, b10, b01, Rp, Rx, deltac)
         RqE = RqE[0]; model_1halo = model_1halo[0]
+        # check for NaNs in RqE and remove if necessary
+        valid = np.logical_not(np.isnan(RqE))
+        RqE = RqE[valid]; model_1halo = model_1halo[valid]
         model_2halo = np.zeros_like(RqE)
         for i, rqe in enumerate(RqE):
             model_2halo[i] = self.eulerian_2halo(rqe, Rp, Rx)
