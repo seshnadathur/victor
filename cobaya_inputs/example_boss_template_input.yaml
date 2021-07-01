@@ -17,6 +17,7 @@ likelihood:
       fiducial_omega_m: 0.31
       fiducial_omega_l: 0.69
       data_uses_reconstruction: True
+      fixed_covmat: False
       delta_profile: use_template
       template_sigma8: 0.628
       model: dispersion

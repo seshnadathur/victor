@@ -18,6 +18,8 @@ settings:
   fiducial_omega_l: 0.69
   # bool indicating that data vector is on a grid of beta
   data_uses_reconstruction: True
+  # bool indicating if covariance matrix fixed or also varies with beta
+  fixed_covmat: False
   # option for how to calculate delta(r) profile
   delta_profile: use_excursion_model
   # option of which model to use for theory calculation
