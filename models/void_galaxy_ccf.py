@@ -169,6 +169,7 @@ class VoidGalaxyCCF:
             # integrate this for the cumulative density profile
             integral = np.zeros_like(r_for_delta)
             for i in range(len(integral)):
+                # since we only do this once, it doesn't matter if we use the slower quad instead of trapz
                 integral[i] = quad(lambda x: 3 * self.delta_r(x) * x**2 / r_for_delta[i]**3, 0, r_for_delta[i], full_output=1)[0]
             self.int_delta_r = _spline(r_for_delta, integral, ext=3)
         elif settings['delta_profile'] == 'use_template':
@@ -324,8 +325,13 @@ class VoidGalaxyCCF:
                 real_multipoles = self.multipoles_real
             xir = _spline(self.r_for_xi, real_multipoles[:self.nrbins], ext=3)  # the real-space monopole
             integral = np.zeros_like(r)
+            npts = 100  # this is plenty to ensure the accuracy of trapz integration
             for i in range(len(r)):
-                integral[i] = quad(lambda x: xir(x) * x**2, 0, r[i], full_output=1)[0]
+                rarr = np.linspace(0, r[i], npts)
+                integrand = xir(rarr) * rarr**2
+                integral[i] = np.trapz(integrand, rarr)
+                # trapz integration is much faster than quad
+                # integral[i] = quad(lambda x: xir(x) * x**2, 0, r[i], full_output=1)[0]
             interpfn = _spline(r, (3 * integral / r**3) / params.get('bias', 2.0), ext=3)
             return interpfn(r)
         elif settings['delta_profile'] == 'use_template':
@@ -469,8 +475,10 @@ class VoidGalaxyCCF:
 
             # vr_term corresponds to v_r/raH where v_r is radial outflow plus component of random dispersion velocity
             # vr_prime_term corresponds to 1/aH times derivative wrt r of v_r
-            vr_term = -growth_term * rescaled_int_delta_r(r) / 3 + y * true_mu_r / r
-            vr_prime_term = -growth_term * (rescaled_delta_r(r) - 2 * rescaled_int_delta_r(r) / 3) + (dy / r) * true_mu_r
+            intdr = rescaled_int_delta_r(r)
+            dr = rescaled_delta_r(r)
+            vr_term = -growth_term * intdr / 3 + y * true_mu_r / r
+            vr_prime_term = -growth_term * (dr - 2 * intdr / 3) + (dy / r) * true_mu_r
 
             integrand = (1 + rescaled_xi_r(r)) * (1 + vr_term + (vr_prime_term - vr_term) * true_mu_r**2)**(-1) * \
                         np.exp(-0.5 * (y / sy)**2) / (sy * np.sqrt(2 * np.pi))
@@ -528,9 +536,10 @@ class VoidGalaxyCCF:
 
         xi_smu = self.theory_xi(S, Mu, params, settings)
         xi_model = si.interp2d(s, mu, xi_smu, kind='cubic')
-        monopole = multipoles.multipoles(xi_model, s, ell=0)
-        quadrupole = multipoles.multipoles(xi_model, s, ell=2)
-        hexadecapole = multipoles.multipoles(xi_model, s, ell=4)
+        monopole, quadrupole, hexadecapole = multipoles.multipoles_singleshot(xi_model, s)
+        # monopole = multipoles.multipoles(xi_model, s, ell=0)
+        # quadrupole = multipoles.multipoles(xi_model, s, ell=2)
+        # hexadecapole = multipoles.multipoles(xi_model, s, ell=4)
 
         return monopole, quadrupole, hexadecapole
 
@@ -593,7 +602,8 @@ class VoidGalaxyCCF:
                 determinant = np.linalg.slogdet(cov)
                 if not determinant[0] == 1:
                     # something has gone dramatically wrong!
-                    return -np.inf
+                    print('Likelihood evaluation failed, bad covariance matrix?')
+                    return -np.inf, np.inf
                 like_factor = -0.5 * determinant[1]
             if 'Sellentin' in settings['likelihood_type']:
                 # use the approach of Sellentin & Heavens 2016 to correctly propagate the uncertainty in the
@@ -613,9 +623,9 @@ class VoidGalaxyCCF:
 
             # add a sanity check to catch cases which fail due to unforeseen errors (e.g. -ve chisq, ...)
             if np.isnan(lnlike):
-                print(f'Likelihood evaluation failed. Parameters at fail point: {params}')
+                print(f'Likelihood evaluation failed, returning NaN. Parameters at fail point: {params}')
                 print(f'Chisq: {chisq}, like_factor: {like_factor}')
-                lnlike = -np.inf
+                lnlike = -np.inf, np.inf
 
         else:
             print('fit_to_data is False, cannot calculate lnlike?!')

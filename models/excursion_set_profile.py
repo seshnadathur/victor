@@ -77,6 +77,20 @@ class ExcursionSetProfile:
         integrand = kk**(2 + 2 * j) * self.normalisation * self.pk.P(0, kk) * self.window(kk, rp, Rx)**2 / (2 * np.pi**2)
         return np.trapz(integrand, kk, axis=1)
 
+    def sj_pp_ratio(self, Rp, Rx, Rq=None):
+        """
+        Ratio of sj_pp(j=0) / sj_pp(j=1) when both evaluated at the same Rp, Rx, Rq values
+        This implementation is faster than using individual repeated calls to the method above
+        """
+        kk, rp, rq = np.meshgrid(self.k, Rp, Rq)
+        window = self.window_tophat(kk, rp) * np.exp(-(kk * rp / Rx)**2 / 2)
+        integrand0 = kk**2 * self.normalisation * self.pk.P(0, kk) * window**2 / (2 * np.pi**2)
+        integrand1 = kk**2 * integrand0
+        j_zero = np.trapz(integrand0, kk, axis=1)
+        j_one = np.trapz(integrand1, kk, axis=1)
+
+        return j_zero / j_one
+
     def s0_derivative_term(self, Rp, Rq, Rx):
         """
         Derivative ds_0^pq / ds_0^pp appearing in EST model for Lagrangian density profile
@@ -115,7 +129,10 @@ class ExcursionSetProfile:
         """
         Extra term to Eulerian matter profile of voids arising from void motion
         """
-        bv = 1 - self.k**2 * self.sj_pp(Rp, Rx, 0) / self.sj_pp(Rp, Rx, 1)
+        # faster
+        bv = 1 - self.k**2 * self.sj_pp_ratio(Rp, Rx)
+        # equivalent but slower
+        # bv = 1 - self.k**2 * self.sj_pp(Rp, Rx, 0) / self.sj_pp(Rp, Rx, 1)
         integrand = bv * self.window(self.k, Rp, Rx) * self.window_tophat(self.k, RqE) * self.normalisation * self.pk.P(0, self.k) * self.k**2 / (2 * np.pi**2)
         return np.trapz(integrand, self.k)
 
