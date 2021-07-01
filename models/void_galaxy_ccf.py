@@ -7,13 +7,15 @@ from scipy.integrate import quad, simps
 from scipy.signal import savgol_filter
 from scipy.stats import norm
 from models import ExcursionSetProfile
+from models import EisensteinHu
 from tools import multipoles, cosmology, utilities
 
 _spline = si.InterpolatedUnivariateSpline
 
 @functools.lru_cache(maxsize=10000)
-def get_excursion_set_model(h, om, omb, mnu, ns, omk, z=0):
-    return ExcursionSetProfile(h, om, omb, z=z, mnu=mnu, ns=ns, omega_k=omk)
+def get_excursion_set_model(h, om, omb, mnu, ns, omk, z, use_EH, acc):
+    return ExcursionSetProfile(h, om, omb, z=z, mnu=mnu, ns=ns, omega_k=omk,
+                               use_eisenstein_hu=use_EH, camb_accuracy=acc)
 
 class VoidGalaxyCCF:
     """
@@ -295,7 +297,9 @@ class VoidGalaxyCCF:
             ns = params.get('ns', 0.96)
             mnu = params.get('mnu', 0.06)
             omk = params.get('Omega_k', 0)
-            esp = get_excursion_set_model(h, om, omb, mnu, ns, omk, self.effective_z)
+            use_EH = settings.get('use_eisenstein_hu', False)
+            acc = settings.get('camb_accuracy', 1.0)
+            esp = get_excursion_set_model(h, om, omb, mnu, ns, omk, self.effective_z, use_EH, acc)
             esp.set_normalisation(s80, z=0)
             # get the value of sigma8(z) to return as derived parameter
             self.s8z = esp.s8z_fiducial * np.sqrt(esp.normalisation)
@@ -349,7 +353,9 @@ class VoidGalaxyCCF:
             ns = params.get('ns', 0.96)
             mnu = params.get('mnu', 0.06)
             omk = params.get('Omega_k', 0)
-            esp = get_excursion_set_model(h, om, omb, mnu, ns, omk, self.effective_z)
+            use_EH = settings.get('use_eisenstein_hu', False)
+            acc = settings.get('camb_accuracy', 1.0)
+            esp = get_excursion_set_model(h, om, omb, mnu, ns, omk, self.effective_z, use_EH, acc)
             esp.set_normalisation(s80, z=0)
             # get the value of sigma8(z) to return as derived parameter
             self.s8z = esp.s8z_fiducial * np.sqrt(esp.normalisation)
