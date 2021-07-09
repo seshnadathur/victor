@@ -387,7 +387,7 @@ class VoidGalaxyCCF:
             delta2[i] = esp.growth_factor(self.effective_z) * esp.eulerian_2halo(re, Rp, Rx)
 
         DeltaL = esp.lagrangian_profile(x, b10, b01, Rp, Rx)
-        
+
         if pairwise:
             # return expression for pairwise void-galaxy motion, ie including contribution for void motion
             # we never really want this option for void-galaxy ccf studies; included for completeness only
@@ -518,7 +518,7 @@ class VoidGalaxyCCF:
 
         return v_r, v_r_prime
 
-    def new_theory_xi(self, s, mu, params, settings):
+    def theory_xi(self, s, mu, params, settings):
         """
         Calculates the model prediction for the anisotropic redshift-space cross-correlation xi(s, mu)
         """
@@ -657,191 +657,7 @@ class VoidGalaxyCCF:
         return xi_smu
 
 
-    def theory_xi(self, s, mu, params, settings):
-        """
-        Calculates the model prediction for the anisotropic redshift-space cross-correlation xi(s, mu)
-        """
-
-        beta = params.get('beta')
-        epsilon = params.get('epsilon', params['aperp'] / params['apar'])
-        if settings['delta_profile'] == 'use_linear_bias':
-            # the bias parameter included in growth_term cancels the same factor in defining delta
-            # so its value is irrelevant for RSD (though useful for delta itself)
-            growth_term = beta * params.get('bias', 2.0)
-        elif settings['delta_profile'] == 'use_template':
-            # the value of sigma8(z_sim) for the simulation used to obtain the template must also be provided to scale template amplitude
-            if not 'template_sigma8' in settings:
-                raise ValueError('template_sigma8 must be provided in settings to use delta template')
-            growth_term = params['fsigma8'] / settings['template_sigma8']
-        elif settings['delta_profile'] == 'use_excursion_model':
-            growth_term = params['f']
-        else:
-            raise ValueError('Unrecognised choice of option delta_profile')
-        # NOTE: in each case above, growth_term is defined such as to be proportional to growth rate f
-        # The proportionality factors differ with the choice of how delta(r) is to be calculated, in such a way
-        # that in the code below the growth_term factor can be used in the same way in each case
-
-        if self.use_recon:
-            real_multipoles = self.get_interpolated_multipoles(beta, redshift=False)
-        else:
-            real_multipoles = self.multipoles_real
-
-        # apply Alcock-Paczynski correction by rescaling the radial coordinate
-        mu_vals = np.linspace(1e-8, 1)
-        mu_integral = np.trapz(params.get('apar', 1.0) * np.sqrt(1 + (1 - mu_vals**2) * (epsilon**2 - 1)), mu_vals)
-        ref_r = self.r_for_xi
-        rescaled_r = ref_r * mu_integral  # this is now r in the true cosmology
-
-        # rescale the input real-space xi(r) function accordingly
-        rescaled_xi_r = _spline(rescaled_r, real_multipoles[:self.nrbins], ext=3)
-        # depending on option for obtaining delta(r), rescale that too
-        if settings['delta_profile'] in ['use_linear_bias', 'use_template']:
-            rescaled_delta_r = _spline(rescaled_r, self.delta_fn(ref_r, params, settings), ext=3)
-            rescaled_int_delta_r = _spline(rescaled_r, self.integrated_delta_fn(ref_r, params, settings), ext=3)
-        else:
-            # if using the excursion set model for delta(r), don't apply the rescaling to that
-            rescaled_delta_r = _spline(ref_r, self.delta_fn(ref_r, params, settings), ext=3)
-            rescaled_int_delta_r = _spline(ref_r, self.integrated_delta_fn(ref_r, params, settings), ext=3)
-        if settings['model'] in ['dispersion', 'streaming']:
-            # so far only coded a template approach to the dispersion profile sigma_v(r) so this is always rescaled
-            rescaled_sv_norm_func = _spline(rescaled_r, self.sv_norm_func(ref_r), ext=3)
-            sv_grad = _spline(rescaled_r, np.gradient(rescaled_sv_norm_func(rescaled_r), rescaled_r), ext=3)
-            sigma_v = params.get('sigma_v', 380) * params.get('apar', 1.0)
-
-            y = np.linspace(-5, 5) * 500 * self.iaH  # use 5x and 500 to make sure range is wide enough in all cases
-            if np.ndim(s) == 2 and np.ndim(mu) == 2:
-                if not s.shape == mu.shape:
-                    raise ValueError('If arguments s and mu are 2D arrays they must have the same shape')
-                S, Mu, Y = np.meshgrid(s[0], mu[:, 0], y)
-            elif np.ndim(s) == 1 and np.ndim(mu) == 1:
-                S, Mu, Y = np.meshgrid(s, mu, y)
-            else:
-                raise ValueError('Arguments s and mu must have the same dimensions')
-        else:
-            if np.ndim(s) == 2 and np.ndim(mu) == 2:
-                if not s.shape == mu.shape:
-                    raise ValueError('If arguments s and mu are 2D arrays they must have the same shape')
-                S, Mu = s, mu
-            elif np.ndim(s) == 1 and np.ndim(mu) == 1:
-                S, Mu = np.meshgrid(s, mu)
-            else:
-                raise ValueError('Arguments s and mu must have the same dimensions')
-
-        # apply AP corrections to get redshift-space coordinates (true_s, true_mu) in the true
-        # cosmology from (s, mu) in fiducial cosmology
-        true_mu = Mu
-        true_mu[Mu>0] = 1 / np.sqrt(1 + epsilon**2 * (1 / Mu[Mu>0]**2 - 1))
-        true_sperp = S * np.sqrt(1 - true_mu**2) * params.get('aperp', 1.0)
-        true_spar = S * true_mu * params.get('apar', 1.0)
-        true_s = np.sqrt(true_spar**2 + true_sperp**2)
-
-        # now implement coordinate transformation from redshift-space to real-space coordinates
-        if not settings.get('do_coord_shift', True):
-            # some papers do not account for the coordinate shift correctly and thus calculate
-            # the RSD model as xi(r, mu_r) instead of xi(s, mu) – this option allows to reproduce
-            # the results in those papers; however remember this is actually not correct!
-            r_par = true_spar
-        else:
-            # in the default case, using iterative solver to do the transformation
-            M = params.get('M', 1.0) if settings['model'] == 'Kaiser' else 1.0
-            r_par = true_spar / (1 - M * growth_term * rescaled_int_delta_r(true_s) / 3)
-            for i in range(settings.get('niter', 5)):
-                r = np.sqrt(true_sperp**2 + r_par**2)
-                r_par = true_spar / (1 - M * growth_term * rescaled_int_delta_r(r) / 3)
-        # r_par is now the real-space l-o-s pair separation calculated using the mean coherent outflow velocity
-        r = np.sqrt(true_sperp**2 + r_par**2)
-
-        # recalculate the real-space mu from redshift-space value
-        true_mu_r = r_par / r
-
-        if settings['model'] == 'dispersion':  # implement the velocity dispersion model of Nadathur & Percival 2019
-
-            # convert variable of integration from v to y=v/aH
-            sigma_y = sigma_v * rescaled_sv_norm_func(r) * self.iaH
-            y = sigma_y * Y
-            # Note: we integrate over the range [-X, X] where X = settings['yrange'] * sigma_y
-
-            # rpar is the real-space l-o-s coordinate calculated using actual outflow velocity at
-            # each value of the integration variable y=v/aH
-            rpar = r_par - y
-            r = np.sqrt(true_sperp**2 + rpar**2)
-
-            sy = sigma_v * rescaled_sv_norm_func(r) * self.iaH  # recalculate dispersion at each point
-            dy = sigma_v * sv_grad(r) * self.iaH  # calculate derivative of the velocity dispersion term
-
-            # vr_term corresponds to v_r/raH where v_r is radial outflow plus component of random dispersion velocity
-            # vr_prime_term corresponds to 1/aH times derivative wrt r of v_r
-            intdr = rescaled_int_delta_r(r)
-            dr = rescaled_delta_r(r)
-            vr_term = -growth_term * intdr / 3 + y * true_mu_r / r
-            vr_prime_term = -growth_term * (dr - 2 * intdr / 3) + (dy / r) * true_mu_r
-
-            integrand = (1 + rescaled_xi_r(r)) * (1 + vr_term + (vr_prime_term - vr_term) * true_mu_r**2)**(-1) * \
-                        np.exp(-0.5 * (y / sy)**2) / (sy * np.sqrt(2 * np.pi))
-            # the resulting model prediction for xi(s, mu) from integration
-            xi_smu = np.trapz(integrand, x=y, axis=2) - 1
-
-        elif settings['model'] == 'streaming':  # implement a Gaussian streaming model
-
-            # in this case we recalculate r_par as the coherent mean value is not required
-            r_par = true_spar - Y * sigma_v * rescaled_sv_norm_func(r) * self.iaH
-            # iterate a few times to ensure convergence
-            for i in range(settings.get('niter', 5)):
-                r = np.sqrt(true_sperp**2 + r_par**2)
-                r_par = true_spar - Y * sigma_v * rescaled_sv_norm_func(r) * self.iaH
-            r = np.sqrt(true_sperp**2 + r_par**2)
-            true_mu_r = r_par / r
-            sv = sigma_v * rescaled_sv_norm_func(r)
-
-            # vel_r_mu is the mean l-o-s velocity component
-            vel_r_mu = -growth_term * r * rescaled_int_delta_r(r) / (3 * self.iaH) * true_mu_r
-            # v is the actual l-o-s velocity component being integrated over
-            v = Y * sv
-            vel_pdf = norm.pdf(v, loc=vel_r_mu, scale=sv)
-
-            integrand = (1 + rescaled_xi_r(r)) * vel_pdf
-            xi_smu = simps(integrand, x=v, axis=2) - 1
-
-        elif settings['model'] == 'Kaiser':  # implement simple Kaiser RSD model
-            # check if additional nuisance parameters are included or not as per Hamaus et al 2020
-            M = params.get('M', 1.0)
-            Q = params.get('Q', 1.0)
-
-            if settings.get('approx_Kaiser', False):
-                # this option uses a (poor) approximation to the true expression based on a
-                # series expansion truncated at linear order
-                xi_smu = M * (rescaled_xi_r(r) + growth_term * rescaled_int_delta_r(r) / 3 +
-                              Q * growth_term * true_mu_r**2 * (rescaled_delta_r(r) - rescaled_int_delta_r(r)))
-            else:
-                # directly evaluate full expression without approximation
-                xi_smu = (1 + M * rescaled_xi_r(r)) / (1 - growth_term * rescaled_int_delta_r(r) / 3 -
-                                                       Q * growth_term * true_mu_r**2 *
-                                                       (rescaled_delta_r(r) - rescaled_int_delta_r(r))) - 1
-
-        return xi_smu
-
-
     def theory_multipoles(self, s, params, settings):
-        """
-        Calculate Legendre multipole compression of the model xi(s, mu)
-
-        Returns monopole, quadrupole and hexadecapole moments
-        """
-
-        mu = np.linspace(0, 1)
-        S, Mu = np.meshgrid(s, mu)
-
-        xi_smu = self.theory_xi(S, Mu, params, settings)
-        xi_model = si.interp2d(s, mu, xi_smu, kind='cubic')
-        monopole, quadrupole, hexadecapole = multipoles.multipoles_singleshot(xi_model, s)
-        # monopole = multipoles.multipoles(xi_model, s, ell=0)
-        # quadrupole = multipoles.multipoles(xi_model, s, ell=2)
-        # hexadecapole = multipoles.multipoles(xi_model, s, ell=4)
-
-        return monopole, quadrupole, hexadecapole
-
-
-    def new_theory_multipoles(self, s, params, settings):
         """
         Calculate Legendre multipole compression of the model xi(s, mu)
 
