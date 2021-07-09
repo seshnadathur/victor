@@ -1,4 +1,4 @@
+from models.eisenstein_hu import EisensteinHu
 from models.excursion_set_profile import ExcursionSetProfile
 from models.void_galaxy_ccf import VoidGalaxyCCF
 from models.void_galaxy_posterior import VoidGalaxyPosterior
-from models.eisenstein_hu import EisensteinHu

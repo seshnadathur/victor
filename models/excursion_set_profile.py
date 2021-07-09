@@ -4,7 +4,6 @@ from scipy.special import hyp2f1
 from scipy.interpolate import InterpolatedUnivariateSpline
 from models import EisensteinHu
 
-
 class ExcursionSetProfile:
     """
     Class to calculate predicted void matter density profiles according to the model of Massara & Sheth, 1811.xxxx
@@ -105,7 +104,7 @@ class ExcursionSetProfile:
         Power spectrum variance
         """
         kk, rp, rq = np.meshgrid(self.k, Rp, Rq)
-        integrand = kk**(2 + 2 * j) * self.normalisation * get_pofk(kk, 0) * self.window(kk, rp, Rx)**2 / (2 * np.pi**2)
+        integrand = kk**(2 + 2 * j) * self.normalisation * self.get_pofk(kk, 0) * self.window(kk, rp, Rx)**2 / (2 * np.pi**2)
         return np.trapz(integrand, kk, axis=1)
 
     def sj_pp_ratio(self, Rp, Rx, Rq=None):
@@ -115,7 +114,7 @@ class ExcursionSetProfile:
         """
         kk, rp, rq = np.meshgrid(self.k, Rp, Rq)
         window = self.window_tophat(kk, rp) * np.exp(-(kk * rp / Rx)**2 / 2)
-        integrand0 = kk**2 * self.normalisation * get_pofk(kk, 0) * window**2 / (2 * np.pi**2)
+        integrand0 = kk**2 * self.normalisation * self.get_pofk(kk, 0) * window**2 / (2 * np.pi**2)
         integrand1 = kk**2 * integrand0
         j_zero = np.trapz(integrand0, kk, axis=1)
         j_one = np.trapz(integrand1, kk, axis=1)

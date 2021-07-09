@@ -79,6 +79,9 @@ params:
   #   latex: \alpha
   # NOTE: alternatively, you may want to fix alpha = 1, sample in epsilon, and define aperp and apar as derived parameters
 
+  # This parameter is only used if settings['empirical_velocity_correction'] is True, and quantifies the correction applied
+  Avel: 0
+
   # The following additional parameters are needed in order to use the excursion set model for void delta(r) profiles instead
   # of the simple template fit (for simplicity they are fixed by default here):
   # NOTE: sample in f(z) and sigma_8_0 = sigma_8(z=0) INSTEAD of sampling in fsigma8. You can then set fsigma8 to be a
