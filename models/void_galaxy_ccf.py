@@ -41,7 +41,7 @@ class VoidGalaxyCCF:
         self.use_recon = settings.get('data_uses_reconstruction', True)
         # If reconstruction was used, the redshift-space data vector depends on beta=f/b. Normally, so does the
         # real-space input. We assume they have been measured at several different values of beta and read in the
-        # grid of beta values separately. The covariance matrix also depends on beta, and can be provided on a beta
+        # grid of beta values separately. The covariance matrix can also depend on beta, and can be provided on a beta
         # grid (which can be a different grid if desired). Override options to neglect the beta dependence of the
         # real-space input and the covariance matrix are provided to enable specific testing scenarios. If no
         # reconstruction was used, there is no beta dependence of any of these quantities.
