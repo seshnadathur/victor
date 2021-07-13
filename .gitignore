@@ -7,6 +7,7 @@ tools/__pycache__/
 .ipynb_checkpoints/
 chains/*
 CMASS_data/
+Flagship_data/
 md-box_data/
 Quijote_data/
 old_BOSS_DR12_CMASS_data/
