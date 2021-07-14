@@ -545,7 +545,7 @@ class VoidGalaxyCCF:
         v_r_interp = _spline(x, v_r, ext=3)
         v_r_p_interp  = _spline(x, v_r_prime, ext=3)
 
-        if settings['model'] in ['dispersion', 'streaming']:
+        if settings['rsd_model'] in ['dispersion', 'streaming']:
             # so far only coded a template approach to the dispersion profile sigma_v(r) so this is always rescaled
             rescaled_sv_norm_func = _spline(rescaled_r, self.sv_norm_func(ref_r), ext=3)
             sv_grad = _spline(rescaled_r, np.gradient(rescaled_sv_norm_func(rescaled_r), rescaled_r), ext=3)
@@ -586,7 +586,7 @@ class VoidGalaxyCCF:
             r_par = true_spar
         else:  # default case, using iterative solver to do the transformation
             # M is an optional nuisance parameter introduced by Hamaus et al 2020
-            M = params.get('M', 1.0) if settings['model'] == 'Kaiser' else 1.0
+            M = params.get('M', 1.0) if settings['rsd_model'] == 'Kaiser' else 1.0
             r_par = true_spar / (1 + M * self.iaH * v_r_interp(true_s) / true_s)
             for i in range(settings.get('niter', 5)):
                 r = np.sqrt(true_sperp**2 + r_par**2)
@@ -597,7 +597,7 @@ class VoidGalaxyCCF:
         # recalculate the real-space mu from redshift-space value
         true_mu_r = r_par / r
 
-        if settings['model'] == 'dispersion':  # implement the velocity dispersion model of Nadathur & Percival 2019
+        if settings['rsd_model'] == 'dispersion':  # implement the velocity dispersion model of Nadathur & Percival 2019
 
             # convert variable of integration from v to y=v/aH
             sigma_y = sigma_v * rescaled_sv_norm_func(r) * self.iaH
@@ -621,7 +621,7 @@ class VoidGalaxyCCF:
             # the resulting model prediction for xi(s, mu) from integration
             xi_smu = np.trapz(integrand, x=y, axis=2) - 1
 
-        elif settings['model'] == 'streaming':  # implement a Gaussian streaming model
+        elif settings['rsd_model'] == 'streaming':  # implement a Gaussian streaming model
 
             # in this case we recalculate r_par as the coherent mean value is not required
             r_par = true_spar - Y * sigma_v * rescaled_sv_norm_func(r) * self.iaH
@@ -639,7 +639,7 @@ class VoidGalaxyCCF:
             integrand = (1 + rescaled_xi_r(r)) * vel_pdf
             xi_smu = simps(integrand, x=v, axis=2) - 1
 
-        elif settings['model'] == 'Kaiser':  # implement simple Kaiser RSD model
+        elif settings['rsd_model'] == 'Kaiser':  # implement simple Kaiser RSD model
             # check if additional nuisance parameters are included or not as per Hamaus et al 2020
             M = params.get('M', 1.0)
             Q = params.get('Q', 1.0)
@@ -751,7 +751,8 @@ class VoidGalaxyCCF:
                 a = (nmocks - p - 2) / (nmocks - 1)
                 lnlike = -0.5 * chisq * a + like_factor
             else:
-                # not applying any correction – if your covariance matrix is estimated this is wrong!
+                # not applying any correction – if your covariance matrix is estimated from mocks this is
+                # probably wrong!
                 lnlike = -0.5 * chisq + like_factor
 
             # add a sanity check to catch cases which fail due to unforeseen errors (e.g. -ve chisq, ...)

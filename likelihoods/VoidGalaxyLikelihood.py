@@ -66,6 +66,9 @@ class VoidGalaxyLikelihood(Likelihood):
 
         self.vgfitter = VoidGalaxyCCF(self.paths, self.settings)
 
+    def get_can_provide_params(self):
+        return ['fsigma8']
+
     def calculate(self, state, want_derived=True, **params_values):
         """
         """
@@ -82,7 +85,7 @@ class VoidGalaxyLikelihood(Likelihood):
         else:
             lnlike, chisq = self.vgfitter.lnlike_multipoles(params_values, self.settings)
             state['logp'] = lnlike
+            state['derived'] = {'chi2_VoidGalaxyLikelihood_correct': chisq}
             if self.settings['delta_profile'] == 'use_excursion_model':
-                state['derived'] = {'chi2_VoidGalaxyLikelihood_correct': chisq, 'fsigma8': params_values['f'] * self.vgfitter.s8z}
-            else:
-                state['derived'] = {'chi2_VoidGalaxyLikelihood_correct': chisq}
+                # add fsigma8 as a derived parameter
+                state['derived']['fsigma8'] = params_values['f'] * self.vgfitter.s8z

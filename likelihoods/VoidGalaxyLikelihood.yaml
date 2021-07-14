@@ -8,105 +8,70 @@ settings:
 paths:
 
 params:
-  # in the simplest case of a template fit, you will want to sample over the following parameters:
-  fsigma8:  # NOTE: this is f(z)sigma_8(z), where z is the effective redshift of the sample
-    prior:
-      dist: uniform
-      min: 0.05
-      max: 1.5
-    ref:
-      dist: norm
-      loc: 0.47
-      scale: 0.05
-    proposal: 0.05
-    latex: f\sigma_8
+  # ------------
+  # Depending on settings, the following parameters might be input parameters (to be sampled over
+  # or to be fixed) or they might be derived output parameters. The choice of whether they are
+  # input or derived parameters for any run should be made in the input yaml file
+  # ------------
+  # fsigma8 is a derived parameter for excursion set model fit and input parameter otherwise (for
+  # a linear bias fit it can simply be fixed and will be ignored in the likelihood calculation)
+  fsigma8:
+  # if using uninformative priors it is better to sample in beta, since it lies along degeneracy
+  # direction in the posterior; but in some cases informative priors on the bias are more useful and
+  # will be applied directly to bsigma8 (for a template fit) or b (for linear bias or excursion set
+  # model fit) with beta becoming a derived parameter
+  beta:
+  # ------------
 
-  beta:  # NOTE: this is f(z) / b where b is the large-scale (constant) linear galaxy bias
-    prior:
-      dist: uniform
-      min: 0.2
-      max: 0.6
-    ref:
-      dist: norm
-      loc: 0.4
-      scale: 0.05
-    proposal: 0.01
-    latex: \beta
+  # if sampling in beta, these parameters can be left fixed to these defaults and will be ignored
+  # alternatively one can sample in bsigma8 (template fit) or b (lin bias or excursion set model fit)
+  # and set beta appropriately from this in the input yaml
+  bsigma8: 1.34
+  b: 1.9
 
-  sigma_v:
-    prior:
-      dist: uniform
-      min: 100
-      max: 500
-    ref:
-      dist: norm
-      loc: 380
-      scale: 10
-    proposal: 10
-    latex: \sigma_v
-
+  # ------------
+  # Alcock-Paczynski parameters: the isotropic dilation parameter alpha = aperp^(2/3) * apar^(1/3)
+  # and the distortion parameter epsilon = aperp / apar are most efficient to sample over in the input
+  # yaml, as these correspond to the expected degeneracy directions of the posterior (and constraints in
+  # epsilon are the most interesting). But the likelihood requires aperp and apar individually too.
+  alpha: 1
+  epsilon: 1
   aperp:
-    prior:
-      dist: uniform
-      min: 0.8
-      max: 1.2
-    ref:
-      dist: norm
-      loc: 1.0
-      scale: 0.02
-    proposal: 0.01
-    latex: \alpha_{\perp}
-
+    value: "lambda alpha, epsilon: alpha * epsilon**(1/3)"
+    latex: \alpha_\perp
   apar:
-    prior:
-      dist: uniform
-      min: 0.8
-      max: 1.2
-    ref:
-      dist: norm
-      loc: 1.0
-      scale: 0.02
-    proposal: 0.01
+    value: "lambda alpha, epsilon: alpha * epsilon**(-2/3)"
     latex: \alpha_{||}
 
-  # and epsilon = aperp / apar is the most useful cosmological constraint
-  epsilon:
-    derived: "lambda aperp, apar: aperp / apar"
-    latex: \epsilon
-  # for completeness, can define alpha = aperp^(2/3) * apar^(1/3), but this is not constrained by the likelihood
-  # alpha:
-  #   derived: "lambda aperp, apar: aperp**(2/3) * apar**(1/3)"
-  #   latex: \alpha
-  # NOTE: alternatively, you may want to fix alpha = 1, sample in epsilon, and define aperp and apar as derived parameters
-
-  # This parameter is only used if settings['empirical_velocity_correction'] is True, and quantifies the correction applied
-  Avel: 0
-
-  # The following additional parameters are needed in order to use the excursion set model for void delta(r) profiles instead
-  # of the simple template fit (for simplicity they are fixed by default here):
-  # NOTE: sample in f(z) and sigma_8_0 = sigma_8(z=0) INSTEAD of sampling in fsigma8. You can then set fsigma8 to be a
-  # derived parameter, as for the chi2 shown below, to obtain values of f(z)sigma_8(z) at the relevant z in the chain
-  f: 0.778
-  sigma_8_0: 0.81
-  # four main (nuisance) parameters determining delta(r):
+  # -------------
+  # Other parameters:
+  sigma_v: 380  # asymptotic value of velocity dispersion at large r, in km/s
+  Avel: 0 # empirical parameter for velocity, relevant if empirical_velocity_correction is True in settings
+  f: 0.778 # growth rate f(z), only relevant if excursion set model used for delta profile in settings
+  sigma_8_0: 0.81 # sigma_8(z=0), only relevant if excursion set model used for delta profile in settings
+  # four nuisance parameters determining delta(r) in excursion set model:
   b10: -1.544
   b01: -4.228
   Rp: 7.973
   Rx: 0.467
-  # cosmological parameters indirectly determining delta(r) via their effect on the matter P(k):
+  # cosmological parameters (currently) only used to calculate P(k) when using the excursion set model:
+  # [these parameters are all slow so use speed blocking if varying them]
   Omega_m: 0.31
   Omega_b: 0.048
   H0: 67.5
   ns: 0.96
-  # NOTE: the four cosmo params above are ~10x slower to vary than all others, so use speed blocking for fast-slow separation
-  # additional parameters not expected to vary, but defined here just to allow the possibility in the future
-  delta_c: 1.686  # would be fast
-  mnu: 0.06  # slow
-  Omega_k: 0  # slow
+  mnu: 0.06
+  Omega_k: 0
+  # additional non-cosmological collapse parameter in excursion set model:
+  delta_c: 1.686
+  # fudge factor monopole/quadrupole parameters only used in Kaiser RSD model:
+  M: 1
+  Q: 1
+  # -------------
 
+  # -------------
   # internally calculated derived parameters:
-  # (Cobaya's automatically calculated chi2 is generically incorrect)
+  # [Cobaya's automatically calculated chi2 is generically incorrect]
   chi2_VoidGalaxyLikelihood_correct:
     derived: True
     latex: \chi^2
-  # (if sampling in f and sigma_8_0, set fsigma8 to be derived as above as well)
