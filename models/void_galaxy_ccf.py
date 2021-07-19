@@ -441,11 +441,11 @@ class VoidGalaxyCCF:
             growth_term = params['f']
 
         # now calculate v_r depending on the model choices
-        model = settings.get('velocity_model', 'linear')
+        vmodel = settings.get('velocity_model', 'linear')
         empirical_corr = settings.get('empirical_velocity_correction', False)
         Avel = params.get('Avel', 0)
         r_for_int = np.linspace(0.1, np.max(self.r_for_xi), 100)  # to get finer grid on which to calculate numerical derivatives
-        if model == 'linear':
+        if vmodel == 'linear':
             if not empirical_corr:
                 # simplest linearised form of continuity equation, v_r = -faHrDelta(r)/3
                 v_r = -growth_term * r * int_delta(r) / (3 * self.iaH)
@@ -458,7 +458,7 @@ class VoidGalaxyCCF:
                 vr_int = -growth_term * r_for_int * int_delta(r_for_int) * (1 + Avel * delta(r_for_int)) / (3 * self.iaH)
                 vrp = _spline(r_for_int, np.gradient(vr_int, r_for_int), ext=3)
                 v_r_prime = vrp(r)
-        elif model == 'part_linear':
+        elif vmodel == 'part_linear':
             # NOTE/TODO: here there is an inconsistency combined with use_linear_bias or use_template options which needs fixing
             # for use_linear_bias, we have calculated delta(r) = xi(r) / b for fixed b=2 by default
             # for use_template, we have delta_template(r), which needs to be multiplied by sigma_8(z) / template_sigma8
@@ -479,7 +479,7 @@ class VoidGalaxyCCF:
                 vr_int = -growth_term * r_for_int * int_delta(r_for_int) * (1 + Avel * delta(r_for_int))/ (3 * self.iaH * (1 + delta(r_for_int)))
                 vrp = _spline(r_for_int, np.gradient(vr_int, r_for_int), ext=3)
                 v_r_prime = vrp(r)
-        elif model == 'non_linear':
+        elif vmodel == 'non_linear':
             # first step is to calculate non-linear expression for (dDelta/dlna)
             # this can only be done in the excursion set model
             if not settings['delta_profile'] == 'use_excursion_model':
