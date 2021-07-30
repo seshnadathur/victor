@@ -208,46 +208,57 @@ class VoidGalaxyCCF:
         """
 
         if redshift:
-            return si.PchipInterpolator(self.beta_grid, self.multipoles_redshift, axis=0)(beta)
+            if self.use_recon:
+                return si.PchipInterpolator(self.beta_grid, self.multipoles_redshift, axis=0)(beta)
+            else:
+                return self.multipoles_redshift
         else:
-            return si.PchipInterpolator(self.beta_grid, self.multipoles_real, axis=0)(beta)
+            if self.use_recon:
+                return si.PchipInterpolator(self.beta_grid, self.multipoles_real, axis=0)(beta)
+            else:
+                return self.multipoles_real
 
     def get_interpolated_covmat(self, beta):
         """
         Return the interpolated covariance matrix at the specified value of beta=f/b
         """
 
-        # if the requested beta value falls outside the provided grid, return the covariance matrix fixed to
-        # the value at the extreme edge of the grid (for a grid that is wide wrt the posterior in beta, this
-        # will not affect science results but prevents the code from crashing if accidentally hitting a boundary)
-        if beta < self.covmat_beta_grid[0]:
-            return self.covmat[0]
-        if beta > self.covmat_beta_grid[-1]:
-            return self.covmat[-1]
+        if self.fixed_covmat or not self.use_recon:
+            return self.covmat
+        else:
+            # if the requested beta value falls outside the provided grid, return the covariance matrix fixed to
+            # the value at the extreme edge of the grid (for a grid that is wide wrt the posterior in beta, this
+            # will not affect science results but prevents the code from crashing if accidentally hitting a boundary)
+            if beta < self.covmat_beta_grid[0]:
+                return self.covmat[0]
+            if beta > self.covmat_beta_grid[-1]:
+                return self.covmat[-1]
 
-        # else find bounding beta values in the grid
-        lind = np.where(self.covmat_beta_grid < beta)[0][-1]
-        hind = np.where(self.covmat_beta_grid >= beta)[0][0]
-        # return the simple linear interpolation of the covmat measured at these two beta values
-        # we use the arithmetic interpolation because this seems to perform better than geometric
-        # interpolation, and is simpler and faster to implement
-        t = (beta - self.covmat_beta_grid[lind]) / (self.covmat_beta_grid[hind] - self.covmat_beta_grid[lind])
-        return (1 - t) * self.covmat[lind] + t * self.covmat[hind]
+            # else find bounding beta values in the grid
+            lind = np.where(self.covmat_beta_grid < beta)[0][-1]
+            hind = np.where(self.covmat_beta_grid >= beta)[0][0]
+            # return the simple linear interpolation of the covmat measured at these two beta values
+            # we use the arithmetic interpolation because this seems to perform better than geometric
+            # interpolation, and is simpler and faster to implement
+            t = (beta - self.covmat_beta_grid[lind]) / (self.covmat_beta_grid[hind] - self.covmat_beta_grid[lind])
+            return (1 - t) * self.covmat[lind] + t * self.covmat[hind]
 
     def get_interpolated_precision(self, beta):
         """
         Return the interpolated inverse covariance (precision) matrix at the specified value of beta=f/b
         """
-
-        # interpolation proceeds exactly as for the covariance matrix case above
-        if beta < self.covmat_beta_grid[0]:
-            return self.icovmat[0]
-        if beta > self.covmat_beta_grid[-1]:
-            return self.icovmat[-1]
-        lind = np.where(self.covmat_beta_grid < beta)[0][-1]
-        hind = np.where(self.covmat_beta_grid >= beta)[0][0]
-        t = (beta - self.covmat_beta_grid[lind]) / (self.covmat_beta_grid[hind] - self.covmat_beta_grid[lind])
-        return (1 - t) * self.icovmat[lind] + t * self.icovmat[hind]
+        if self.fixed_covmat or not self.use_recon:
+            return self.icovmat
+        else:
+            # interpolation proceeds exactly as for the covariance matrix case above
+            if beta < self.covmat_beta_grid[0]:
+                return self.icovmat[0]
+            if beta > self.covmat_beta_grid[-1]:
+                return self.icovmat[-1]
+            lind = np.where(self.covmat_beta_grid < beta)[0][-1]
+            hind = np.where(self.covmat_beta_grid >= beta)[0][0]
+            t = (beta - self.covmat_beta_grid[lind]) / (self.covmat_beta_grid[hind] - self.covmat_beta_grid[lind])
+            return (1 - t) * self.icovmat[lind] + t * self.icovmat[hind]
 
     def correlation_matrix(self, beta):
         """

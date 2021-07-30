@@ -6,7 +6,7 @@ parameter_files/__pycache__/
 tools/__pycache__/
 .ipynb_checkpoints/
 chains/*
-CMASS_data/
+DR12_mocks/
 Flagship_data/
 md-box_data/
 Quijote_data/
@@ -16,4 +16,4 @@ cobaya_inputs/patchy*
 cobaya_inputs/nseries*
 code_development.ipynb
 void-velocity.ipynb
-Untitled.ipynb
+make_figures.ipynb
