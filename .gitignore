@@ -6,11 +6,11 @@ parameter_files/__pycache__/
 tools/__pycache__/
 .ipynb_checkpoints/
 chains/*
-DR12_mocks/
-Flagship_data/
-md-box_data/
-Quijote_data/
-old_BOSS_DR12_CMASS_data/
+DR12_mocks/*
+Flagship_data/*
+md-box_data/*
+Quijote_data/*
+old_BOSS_DR12_CMASS_data/*
 cobaya_inputs/flagship*.yaml
 cobaya_inputs/patchy*
 cobaya_inputs/nseries*
