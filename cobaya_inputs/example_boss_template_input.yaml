@@ -20,7 +20,7 @@ likelihood:
       fixed_covmat: False
       delta_profile: use_template
       template_sigma8: 0.628
-      model: dispersion
+      rsd_model: dispersion
       likelihood_type:
         Sellentin:
           nmocks: 1000

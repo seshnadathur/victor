@@ -23,7 +23,7 @@ settings:
   # option for how to calculate delta(r) profile
   delta_profile: use_excursion_model
   # option of which model to use for theory calculation
-  model: dispersion
+  rsd_model: dispersion
   # how to calculate the likelihood
   likelihood_type:
     # options are Sellentin, Hartlap or Gaussian

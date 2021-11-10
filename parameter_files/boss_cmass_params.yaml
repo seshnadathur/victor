@@ -27,7 +27,7 @@ settings:
   # sigma8(z=z_sim) for the simulation used to derive the delta(r) template
   template_sigma8: 0.628
   # option of which model to use for theory calculation
-  model: dispersion
+  rsd_model: dispersion
   # how to calculate the likelihood
   likelihood_type:
     # options are Sellentin, Hartlap or Gaussian
