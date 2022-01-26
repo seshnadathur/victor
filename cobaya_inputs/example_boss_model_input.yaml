@@ -19,7 +19,7 @@ likelihood:
       data_uses_reconstruction: True
       fixed_covmat: False
       delta_profile: use_excursion_model
-      model: dispersion
+      rsd_model: dispersion
       likelihood_type:
         Sellentin:
           nmocks: 1000
