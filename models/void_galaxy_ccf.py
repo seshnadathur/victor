@@ -534,9 +534,20 @@ class VoidGalaxyCCF:
         Calculates the model prediction for the anisotropic redshift-space cross-correlation xi(s, mu)
         """
 
+        # for dispersion/streaming models need a variable to integrate over
+        x = np.linspace(-6, 6) if settings['rsd_model'] in ['dispersion', 'streaming'] else 0
+        # build grid of coordinates at which to evaluate model
+        if np.ndim(s) == 2 and np.ndim(mu) == 2:
+            if not s.shape == mu.shape:
+                raise ValueError('If arguments s and mu are 2D arrays they must have the same shape')
+            S, Mu, X = np.meshgrid(s[0], mu[:, 0], x)
+        elif np.ndim(s) == 1 and np.ndim(mu) == 1:
+            S, Mu, X = np.meshgrid(s, mu, x)
+        else:
+            raise ValueError('Arguments s and mu must have the same dimensions')
+
         beta = params.get('beta')
         epsilon = params.get('epsilon', params['aperp'] / params['apar'])
-
         if self.use_recon:
             real_multipoles = self.get_interpolated_multipoles(beta, redshift=False)
         else:
@@ -545,125 +556,99 @@ class VoidGalaxyCCF:
         # apply Alcock-Paczynski correction by rescaling the radial coordinate
         mu_vals = np.linspace(1e-8, 1)
         mu_integral = np.trapz(params.get('apar', 1.0) * np.sqrt(1 + (1 - mu_vals**2) * (epsilon**2 - 1)), mu_vals)
-        ref_r = self.r_for_xi
-        rescaled_r = ref_r * mu_integral  # this is now r in the true cosmology
+        reference_r = self.r_for_xi
+        rescaled_r = reference_r * mu_integral  # this is now r in the true cosmology
 
         # rescale the input real-space xi(r) function accordingly
         rescaled_xi_r = _spline(rescaled_r, real_multipoles[:self.nrbins], ext=3)
         # build interpolating function for the velocity velocity terms
-        x = self.r_for_xi #np.linspace(0.1, 1.1 * np.max(self.r_for_xi))
-        v_r, v_r_prime = self.velocity_terms(x, rescaled_r, params, settings)
-        v_r_interp = _spline(x, v_r, ext=3)
-        v_r_p_interp  = _spline(x, v_r_prime, ext=3)
+        v_r, v_r_prime = self.velocity_terms(reference_r, rescaled_r, params, settings)
+        v_r_interp = _spline(reference_r, v_r, ext=3)
+        v_r_p_interp  = _spline(reference_r, v_r_prime, ext=3)
 
         if settings['rsd_model'] in ['dispersion', 'streaming']:
-            # so far only coded a template approach to the dispersion profile sigma_v(r) so this is always rescaled
-            rescaled_sv_norm_func = _spline(rescaled_r, self.sv_norm_func(ref_r), ext=3)
-            sv_grad = _spline(rescaled_r, np.gradient(rescaled_sv_norm_func(rescaled_r), rescaled_r), ext=3)
+            # rescale the dispersion profile sigma_v(r)
+            rescaled_sv_norm_func = _spline(rescaled_r, self.sv_norm_func(reference_r), ext=3)
+            # also rescale the amplitude
             sigma_v = params.get('sigma_v', 380) * params.get('apar', 1.0)
-
-            y = np.linspace(-5, 5) * 500 * self.iaH  # use 5x and 500 to make sure range is wide enough in all cases
-            if np.ndim(s) == 2 and np.ndim(mu) == 2:
-                if not s.shape == mu.shape:
-                    raise ValueError('If arguments s and mu are 2D arrays they must have the same shape')
-                S, Mu, Y = np.meshgrid(s[0], mu[:, 0], y)
-            elif np.ndim(s) == 1 and np.ndim(mu) == 1:
-                S, Mu, Y = np.meshgrid(s, mu, y)
-            else:
-                raise ValueError('Arguments s and mu must have the same dimensions')
-        else:
-            if np.ndim(s) == 2 and np.ndim(mu) == 2:
-                if not s.shape == mu.shape:
-                    raise ValueError('If arguments s and mu are 2D arrays they must have the same shape')
-                S, Mu = s, mu
-            elif np.ndim(s) == 1 and np.ndim(mu) == 1:
-                S, Mu = np.meshgrid(s, mu)
-            else:
-                raise ValueError('Arguments s and mu must have the same dimensions')
 
         # apply AP corrections to get redshift-space coordinates (true_s, true_mu) in the true
         # cosmology from (s, mu) in fiducial cosmology
-        true_mu = Mu
-        true_mu[Mu>0] = 1 / np.sqrt(1 + epsilon**2 * (1 / Mu[Mu>0]**2 - 1))
-        true_sperp = S * np.sqrt(1 - true_mu**2) * params.get('aperp', 1.0)
-        true_spar = S * true_mu * params.get('apar', 1.0)
-        true_s = np.sqrt(true_spar**2 + true_sperp**2)
-
-        # now implement coordinate transformation from redshift-space to real-space coordinates
-        if not settings.get('do_coord_shift', True):
-            # some papers do not account for the coordinate shift correctly and thus calculate
-            # the RSD model as xi(r, mu_r) instead of xi(s, mu) – this option allows to reproduce
-            # the results in those papers; however remember this is actually not correct!
-            r_par = true_spar
-        else:  # default case, using iterative solver to do the transformation
-            # M is an optional nuisance parameter introduced by Hamaus et al 2020
-            M = params.get('M', 1.0) if settings['rsd_model'] == 'Kaiser' else 1.0
-            r_par = true_spar / (1 + M * self.iaH * v_r_interp(true_s) / true_s)
-            for i in range(settings.get('niter', 5)):
-                r = np.sqrt(true_sperp**2 + r_par**2)
-                r_par = true_spar / (1 + M * self.iaH * v_r_interp(r) / r)
-        # r_par is now the real-space l-o-s pair separation calculated using the mean coherent outflow velocity
-        r = np.sqrt(true_sperp**2 + r_par**2)
-
-        # recalculate the real-space mu from redshift-space value
-        true_mu_r = r_par / r
+        mu_s = Mu
+        mu_s[Mu>0] = 1 / np.sqrt(1 + epsilon**2 * (1 / Mu[Mu>0]**2 - 1))
+        s_perp = S * np.sqrt(1 - mu_s**2) * params.get('aperp', 1.0)
+        s_par = S * mu_s * params.get('apar', 1.0)
+        s = np.sqrt(s_par**2 + s_perp**2)
 
         if settings['rsd_model'] == 'dispersion':  # implement the velocity dispersion model of Nadathur & Percival 2019
 
-            # convert variable of integration from v to y=v/aH
+            # start with an approximation for real-space coordinate in true cosmology
+            r_par = s_par / (1 + self.iaH * v_r_interp(s) / s) - X * sigma_v * rescaled_sv_norm_func(s) * self.iaH
+            # iteratively improve this approximation
+            for i in range(settings.get('niter', 5)):
+                r = np.sqrt(s_perp**2 + r_par**2)
+                y = X * sigma_v * rescaled_sv_norm_func(r) * self.iaH
+                r_par = s_par / (1 + self.iaH * v_r_interp(r) / r) - y
+            r = np.sqrt(s_perp**2 + r_par**2)
+            mu_r = r_par / r
+
+            # integration variable is y=v/aH which has mean 0 and std dev sigma_y
             sigma_y = sigma_v * rescaled_sv_norm_func(r) * self.iaH
-            y = sigma_y * Y
-            # Note: we integrate over the range [-X, X] where X = settings['yrange'] * sigma_y
+            y_pdf = norm.pdf(y, loc=0, scale=sigma_y)
 
-            # rpar is the real-space l-o-s coordinate calculated using actual outflow velocity at
-            # each value of the integration variable y=v/aH
-            rpar = r_par - y
-            r = np.sqrt(true_sperp**2 + rpar**2)
-
-            sy = sigma_v * rescaled_sv_norm_func(r) * self.iaH  # recalculate dispersion at each point
-            dy = sigma_v * sv_grad(r) * self.iaH  # calculate derivative of the velocity dispersion term
-
-            # vr_term corresponds to v_r/raH where v_r is radial outflow plus component of random dispersion velocity
-            # vr_prime_term corresponds to 1/aH times derivative wrt r of v_r
-            vr_term = self.iaH * v_r_interp(r) / r + y * true_mu_r / r
-            vr_prime_term = self.iaH * v_r_p_interp(r) + (dy / r) * true_mu_r
-            integrand = (1 + rescaled_xi_r(r)) * (1 + vr_term + (vr_prime_term - vr_term) * true_mu_r**2)**(-1) * \
-                        np.exp(-0.5 * (y / sy)**2) / (sy * np.sqrt(2 * np.pi))
-            # the resulting model prediction for xi(s, mu) from integration
-            xi_smu = np.trapz(integrand, x=y, axis=2) - 1
+            # integrate for model prediction
+            jacobian = 1 + self.iaH * v_r_interp(r) / r + self.iaH * (v_r_p_interp(r) - v_r_interp(r) / r) * mu_r**2
+            integrand = (1 + rescaled_xi_r(r)) * jacobian**(-1) * y_pdf
+            xi_smu = simps(integrand, x=y, axis=2) - 1
 
         elif settings['rsd_model'] == 'streaming':  # implement a Gaussian streaming model
 
-            # in this case we recalculate r_par as the coherent mean value is not required
-            r_par = true_spar - Y * sigma_v * rescaled_sv_norm_func(r) * self.iaH
-            # iterate a few times to ensure convergence
+            # start with an approximation for real-space coordinate in true cosmology
+            r_par = s_par - X * sigma_v * rescaled_sv_norm_func(s) * self.iaH
+            # iteratively improve this approximation
             for i in range(settings.get('niter', 5)):
-                r = np.sqrt(true_sperp**2 + r_par**2)
-                r_par = true_spar - Y * sigma_v * rescaled_sv_norm_func(r) * self.iaH
-            r = np.sqrt(true_sperp**2 + r_par**2)
-            true_mu_r = r_par / r
-            sv = sigma_v * rescaled_sv_norm_func(r)
+                r = np.sqrt(s_perp**2 + r_par**2)
+                r_par = s_par - X * sigma_v * rescaled_sv_norm_func(r) * self.iaH
+            r = np.sqrt(s_perp**2 + r_par**2)
+            mu_r = r_par / r
 
-            v = Y * sv
-            vel_pdf = norm.pdf(v, loc=v_r_interp(r) * true_mu_r, scale=sv)
+            # integration variable is v_par, which has mean v_r(r)*mu_r and std dev sigma_v(r)
+            v_par = X * sigma_v * rescaled_sv_norm_func(r)
+            v_pdf = norm.pdf(v_par, loc=v_r_interp(r) * mu_r, scale=sigma_v * rescaled_sv_norm_func(r))
 
-            integrand = (1 + rescaled_xi_r(r)) * vel_pdf
-            xi_smu = simps(integrand, x=v, axis=2) - 1
+            # integrate for model prediction
+            integrand = (1 + rescaled_xi_r(r)) * v_pdf
+            xi_smu = simps(integrand, x=v_par, axis=2) - 1
 
         elif settings['rsd_model'] == 'Kaiser':  # implement simple Kaiser RSD model
             # check if additional nuisance parameters are included or not as per Hamaus et al 2020
             M = params.get('M', 1.0)
             Q = params.get('Q', 1.0)
 
+            if not settings.get('do_coord_shift', True):
+                # some papers do not account for the coordinate shift correctly and thus calculate
+                # the RSD model as xi(r, mu_r) instead of xi(s, mu) – this option allows to reproduce
+                # the results in those papers; however remember this is actually not correct!
+                r_par = s_par
+            else:  # default case, same iterative solution idea as in the models above
+                r_par = s_par / (1 + M * self.iaH * v_r_interp(s) / s)
+                for i in range(settings.get('niter', 5)):
+                    r = np.sqrt(s_perp**2 + r_par**2)
+                    r_par = s_par / (1 + M * self.iaH * v_r_interp(r) / r)
+            r = np.sqrt(s_perp**2 + r_par**2)
+            mu_r = r_par / r
+
             if settings.get('approx_Kaiser', False):
                 # this option uses a (poor) approximation to the true expression based on a
                 # series expansion truncated at linear order
                 xi_smu = M * (rescaled_xi_r(r) - self.iaH * v_r_interp(r) / r - \
-                              Q * true_mu_r**2 * self.iaH * (v_r_p_interp(r) - v_r_interp(r) / r))
+                              Q * mu_r**2 * self.iaH * (v_r_p_interp(r) - v_r_interp(r) / r))
             else:
                 # directly evaluate full expression without approximation
                 xi_smu = (1 + M * rescaled_xi_r(r)) / (1 + self.iaH * v_r_interp(r) / r + \
-                                                       Q * true_mu_r**2 * self.iaH * (v_r_p_interp(r) - v_r_interp(r) / r)) - 1
+                                                       Q * mu_r**2 * self.iaH * (v_r_p_interp(r) - v_r_interp(r) / r)) - 1
+            # drop unnecessary dimension
+            xi_smu = xi_smu[:, :, 0]
 
         return xi_smu
 
@@ -678,15 +663,12 @@ class VoidGalaxyCCF:
         mu = np.linspace(0, 1)
         S, Mu = np.meshgrid(s, mu)
 
-        xi_smu = self.theory_xi(S, Mu, params, settings)
+        xi_smu = theory_xi(self, S, Mu, params, settings)
         xi_model = si.interp2d(s, mu, xi_smu, kind='cubic')
         monopole, quadrupole, hexadecapole = multipoles.multipoles_singleshot(xi_model, s)
-        # monopole = multipoles.multipoles(xi_model, s, ell=0)
-        # quadrupole = multipoles.multipoles(xi_model, s, ell=2)
-        # hexadecapole = multipoles.multipoles(xi_model, s, ell=4)
 
         return monopole, quadrupole, hexadecapole
-
+        
 
     def chi_squared_multipoles(self, params, settings):
         """
