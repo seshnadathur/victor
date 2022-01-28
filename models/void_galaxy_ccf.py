@@ -668,7 +668,7 @@ class VoidGalaxyCCF:
         monopole, quadrupole, hexadecapole = multipoles.multipoles_singleshot(xi_model, s)
 
         return monopole, quadrupole, hexadecapole
-        
+
 
     def chi_squared_multipoles(self, params, settings):
         """
