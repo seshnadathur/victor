@@ -663,12 +663,12 @@ class VoidGalaxyCCF:
         mu = np.linspace(0, 1)
         S, Mu = np.meshgrid(s, mu)
 
-        xi_smu = theory_xi(self, S, Mu, params, settings)
+        xi_smu = self.theory_xi(self, S, Mu, params, settings)
         xi_model = si.interp2d(s, mu, xi_smu, kind='cubic')
         monopole, quadrupole, hexadecapole = multipoles.multipoles_singleshot(xi_model, s)
 
         return monopole, quadrupole, hexadecapole
-        
+
 
     def chi_squared_multipoles(self, params, settings):
         """
