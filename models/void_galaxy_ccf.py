@@ -663,7 +663,7 @@ class VoidGalaxyCCF:
         mu = np.linspace(0, 1)
         S, Mu = np.meshgrid(s, mu)
 
-        xi_smu = theory_xi(self, S, Mu, params, settings)
+        xi_smu = self.theory_xi(S, Mu, params, settings)
         xi_model = si.interp2d(s, mu, xi_smu, kind='cubic')
         monopole, quadrupole, hexadecapole = multipoles.multipoles_singleshot(xi_model, s)
 
@@ -723,8 +723,8 @@ class VoidGalaxyCCF:
 
             # now apply appropriate conversion to get the log likelihood from this
             like_factor = 0
-            if not self.fixed_covmat:
-                # covariance matrix itself varies with beta, so need to normalise for change
+            if self.use_recon and not self.fixed_covmat:
+                # covariance matrix itself varies with beta if using reconstruction, so need to normalise for change
                 determinant = np.linalg.slogdet(cov)
                 if not determinant[0] == 1:
                     # something has gone dramatically wrong!
