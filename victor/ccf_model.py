@@ -541,10 +541,13 @@ class CCFModel:
 
         # build grid of coordinates at which to evaluate the model
         x = np.linspace(-6, 6) if model['rsd_model'] in ['streaming', 'dispersion'] else 0
+        s = np.atleast_1d(s)
+        mu = np.atleast_1d(mu)
         if np.ndim(s) == 2 and np.ndim(mu) == 2:
             if not s.shape == mu.shape:
                 raise InputError('theory_xi: If arguments s and mu are 2D arrays they must have same shape')
-            S, Mu, X = np.meshgrid(s[0], mu[:, 0], x)
+            # S, Mu, X = np.meshgrid(s[0], mu[:, 0], x)
+            S, Mu, X = np.meshgrid(np.unique(s), np.unique(mu), x)
         elif np.ndim(s) == 1 and np.ndim(mu) == 1:
             S, Mu, X = np.meshgrid(s, mu, x)
         else:
@@ -811,11 +814,14 @@ class CCFModel:
             s = np.sqrt(sigma**2 + pi**2)
             return s, pi/s
         s, mu = smu(*np.meshgrid(sperp, spar))
-        xi_smu = self.theory_xi(s, mu, params, **kwargs)
+        xi_smu = np.zeros_like(s)
+        for i in range(s.shape[0]):
+            for j in range(s.shape[1]):
+                xi_smu[i, j] = self.theory_xi(s[i, j], mu[i, j], params, **kwargs)
         xi_model = si.interp2d(sperp, spar, xi_smu)
         return xi_model
 
-    def xi_2D_from_multipoles(self, multipoles, poles, rmax=85):
+    def xi_2D_from_multipoles(self, params, rmax=85, **kwargs):
         r"""
         Use input Legendre multipoles to generate a 2D ccf as a function of distances perpendicular and parallel to the
         line of sight
@@ -837,6 +843,11 @@ class CCFModel:
             Representing the 2D ccf :math:`\xi(r_\perp, r_{||})`
         """
 
+        s = np.linspace(0.01, rmax)
+        multipoles = self.theory_multipoles(s, params, poles=[0, 2, 4], **kwargs)
+        for ell in [0, 2, 4]:
+            multipoles[f'{ell}'] = _spline(s, multipoles[f'{ell}'])
+
         sperp = np.linspace(0.01, rmax)
         spar = np.linspace(-rmax, rmax)  # allow for potential odd functions
         def smu(sigma, pi):
@@ -845,7 +856,7 @@ class CCFModel:
         s, mu = smu(*np.meshgrid(sperp, spar))
 
         xi_2D_grid = np.zeros_like(s)
-        for ell in poles:
+        for ell in [0, 2, 4]:
             xi_2D_grid = xi_2D_grid + multipoles[f'{ell}'](s) * legendre(ell)(mu)
         xi_2D = si.interp2d(sperp, spar, xi_2D_grid)
         return xi_2D

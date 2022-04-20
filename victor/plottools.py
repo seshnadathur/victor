@@ -60,7 +60,7 @@ def shifted_color_map(cmap, start=0, midpoint=0.5, stop=1.0, name='shiftedcmap')
 
     return newcmap
 
-def plot_2D_ccf(xi_sp, rs, rp=None, even=False, cmap=mpl.cm.RdYlBu_r, vmin=-1, vmax=0.5,
+def plot_2D_ccf(xi_sp, rs, rp=None, even=True, cmap=mpl.cm.RdYlBu_r, vmin=-1, vmax=0.5,
                 contours=None, contour_colors='white', clabel=False, clabel_precision=2,
                 linewidths=1.2, shift=True, colorbar=True, axis_label='r', xlabel=None,
                 ylabel=None, cbar_label=None):
