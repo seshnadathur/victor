@@ -1,0 +1,107 @@
+# ----- Block providing model evaluation options ----- #
+model:
+  # path to file with input model data (relative to directory from which the code is invoked) -- if necessary,
+  # a 'dir' key can be provided to model, see the example notebook
+  input_model_data_file: data/BOSS_DR12_CMASS_data/CMASS_zobovVoids_reconRs10_0.43z0.7_medianRvcut_PatchyMean_model.hdf5
+  # model for mapping from real to redshift space: options are 'streaming', 'dispersion', 'kaiser'
+  rsd_model: streaming
+  # effective redshift at which to calculate model
+  z_eff: 0.57
+  # fiducial cosmological model in which to calculate (since H(z_eff)/H_0 enters the model)
+  cosmology:
+    # parameters of background cosmological model: must at least specify Omega_m
+    Omega_m: 0.31
+  # information on the real-space ccf used as input for model evaluation
+  realspace_ccf:
+    # whether real-space ccf information has dependence on reconstruction beta (default False)
+    reconstruction: True
+    # if reconstruction is True, key to identify reconstruction beta information in file
+    beta_key: beta
+    # format can be either 'multipoles' or 'rmu'
+    format: multipoles
+    # if format=='multipoles', list of keys to identify (in order) the radial distance, and monopole,
+    # quadrupole (optional) and hexadecapole (optional) values at these radial distances
+    # if format=='rmu', list of keys to identify (in order) radial distance, mu, and the ccf
+    ccf_keys: ['r', 'monopole', 'quadrupole']
+    # whether to use ccf monopole only (i.e., assume real-space ccf is isotropic) (default False)
+    assume_isotropic: True
+  # how to calculate the cross-correlation with matter entering in the model
+  matter_ccf:
+    # model to use for the matter ccf: options are 'template', 'linear_bias' or 'excursion_set'
+    model: template
+    # ----- template model info (ignored if not using template)----- #
+    # whether template is for integrated density profile (default: False, ie point density profile/ccf with matter)
+    integrated: False
+    # keys to identify (in order) radial distance and monopole of density profile
+    # (no support yet for anisotropic template density profiles)
+    template_keys: ['rdelta', 'delta']
+    # reference value sigma_8(z_sim) for the simulation and redshift used to calibrate template
+    template_sigma8: 0.628
+    # ------------------------------------------------------------- #
+    # if using linear bias model, can specify a fiducial bias value for plots of matter ccf only
+    # (this bias does not affect model calculations which then only depend on beta=f/bias)
+    bias: 1.9
+  # options for calculating the velocity pdf (used only for streaming and dispersion RSD models)
+  velocity_pdf:
+    # the velocity pdf is assumed to be Gaussian, so 2 parts need to be specified: the mean and the dispersion
+    # of this Gaussian (both of which can be position-dependent)
+    mean:
+      # choice of how to model the mean: options are 'linear' (default), 'nonlinear', 'template'
+      # 'linear' uses simple linear model based on matter ccf specified above
+      # 'nonlinear' is only allowed when excursion set model is used for the matter ccf
+      # 'template' ignores matter ccf settings to use a template velocity profile read from file
+      model: linear
+      # whether to allow additional correction parameter on top this mean model (default False)
+      empirical_corr: False
+      # --- template info (ignored if not using template for mean) --- #
+      # keys to identify (in order) radial distance and template profile v(r) in file
+      template_keys:
+      # -------------------------------------------------------------- #
+    dispersion:
+      # model for shape of position-dependent dispersion: options are 'constant' (default) or 'template'
+      model: template
+      # if a template shape is provided it can be anisotropic, ie sigma_v = sigma_v(r, mu)
+      # template keys are required to identify (in order) r, mu (optional) and sigma_v information in the file
+      template_keys: ['rsv', 'sigmav']
+# ---------------------------------------------------- #
+
+# ----- Block providing data and fitting options ----- #
+# Can be omitted if fit to the data is not required
+data:
+  redshift_space_ccf:
+    # whether redshift-space ccf data has a dependence on reconstruction parameter beta (default False)
+    reconstruction: True
+    # path to file with the redshift-space ccf data (as above, relative to dir from which code is run)
+    data_file: data/BOSS_DR12_CMASS_data/CMASS_zobovVoids_reconRs10_0.43z0.7_medianRvcut_data.hdf5
+    # format of ccf in this file: currently only available option is 'multipoles'
+    format: multipoles
+    # if format=='multipoles', list of keys to identify (in order) the radial distance, and monopole,
+    # quadrupole (optional) and hexadecapole (optional) values at these radial distances
+    # if format=='rmu', list of keys to identify (in order) radial distance, mu, and the ccf
+    ccf_keys: ['s', 'monopole', 'quadrupole']
+    # if reconstruction was used, key to identify recon beta information in file (if not found, will default to the beta
+    # for the realspace ccf if that is provided)
+    beta_key:
+  covariance_matrix:
+    # file with the covariance matrix for the measurement of the datavector
+    data_file: data/BOSS_DR12_CMASS_data/CMASS_zobovVoids_reconRs10_0.43z0.7_medianRvcut_variable_D_covariance.hdf5
+    # key to identify covariance information in this file
+    cov_key: covmat
+    # whether the covariance matrix has a dependence on beta for reconstruction (default True)
+    fixed_beta: False
+    # key to identify recon beta information in file (optional, ignored if no reconstruction or fixed_beta is True;
+    # if needed but not found, defaults to using the beta information for the redshift space ccf)
+    beta_key: beta
+  # choice of interpolation method over beta grid: either 'datavector' (interpolate the datavector + covariance)
+  #or 'likelihood' (interpolate the likelihood) (ignored if reconstruction not used)
+  beta_interpolation: datavector
+  # options for how to evaluate the likelihood
+  likelihood:
+    # form of the likelihood correction for propagating uncertainty in covariance matrix estimate:
+    # options are 'gaussian', 'hartlap', 'sellentin' and 'percival'
+    form: sellentin
+    # if form is one of 'hartlap', 'sellentin' and 'percival', number of mocks used to estimate the covmat
+    nmocks: 1000
+    # if form is 'percival', number of parameters to be varied in the fit
+    nparams: 4
+# ---------------------------------------------------- #
