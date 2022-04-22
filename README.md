@@ -35,13 +35,9 @@ If you want edit the code and to collaborate on further development of `victor` 
 ```
 git clone https://YOUR_USERNAME@github.com/YOUR_USERNAME/victor.git
 ```
-For the moment, these instructions only apply to the `develop` branch of `victor`, so make sure you checkout this branch:
-```
-git checkout -b develop
-```
 and then install in editable mode using
 ```
-pythom -m pip install -e .[full]
+pythom -m pip install -e .[all]
 ```
 where the `.[full]` at the end is optional and will install all the extra dependencies as above. (See (here)[https://stackoverflow.com/questions/30239152/specify-extras-require-with-pip-install-e] if you use `zsh` instead of `bash`.)
 
