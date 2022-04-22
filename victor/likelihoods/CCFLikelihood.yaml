@@ -1,0 +1,40 @@
+# default settings for running the likelihood
+# will be overridden by the settings in the input file provided when invoking Cobaya at runtime
+
+model:
+data:
+config_file: config/boss_config.yaml
+
+# --- parameters for MCMC --- #
+params:
+  fsigma8:
+  beta:
+  epsilon:
+  b: 1.9
+  alpha: 1
+  aperp:
+    value: "lambda alpha, epsilon: alpha * epsilon**(1/3)"
+    latex: \alpha_\perp
+  apar:
+    value: "lambda alpha, epsilon: alpha * epsilon**(-2/3)"
+    latex: \alpha_{||}
+  sigma_v: 380
+  Av: 0
+  f: 0.778
+  sigma_8_0: 0.81
+  b10: -1.544
+  b01: -4.228
+  Rp: 7.973
+  Rx: 0.467
+  Omega_m: 0.31
+  Omega_b: 0.048
+  H0: 67.5
+  ns: 0.96
+  mnu: 0.06
+  Omega_k: 0
+  delta_c: 1.686
+  M: 1
+  Q: 1
+  chi2_ccf_correct:
+    derived: True
+    latex: \chi^2

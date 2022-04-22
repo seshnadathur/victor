@@ -1,2 +1,6 @@
 # Auto detect text files and perform LF normalization
-* text=auto
+*               text=auto
+*.rst           text
+*.txt           text
+*.py            text eol=lf
+*.yaml          text

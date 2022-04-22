@@ -1,0 +1,97 @@
+output: chains/test
+
+likelihood:
+  CCFLikelihood:
+    python_path: ./victor/likelihoods/
+    model:
+      input_model_data_file: data/BOSS_DR12_CMASS_data/CMASS_zobovVoids_reconRs10_0.43z0.7_medianRvcut_PatchyMean_model.hdf5
+      rsd_model: streaming
+      z_eff: 0.57
+      cosmology:
+        Omega_m: 0.31
+      realspace_ccf:
+        reconstruction: True
+        beta_key: beta
+        format: multipoles
+        ccf_keys: ['r', 'monopole', 'quadrupole']
+        assume_isotropic_realspace: True
+      matter_ccf:
+        model: template
+        template_keys: ['rdelta', 'delta']
+        template_sigma8: 0.628
+      velocity_pdf:
+        mean:
+          model: linear
+        dispersion:
+          model: template
+          template_keys: ['rsv', 'sigmav']
+
+    data:
+      redshift_space_ccf:
+        reconstruction: True
+        data_file: data/BOSS_DR12_CMASS_data/CMASS_zobovVoids_reconRs10_0.43z0.7_medianRvcut_data.hdf5
+        format: multipoles
+        ccf_keys: ['s', 'monopole', 'quadrupole']
+      covariance_matrix:
+        data_file: data/BOSS_DR12_CMASS_data/CMASS_zobovVoids_reconRs10_0.43z0.7_medianRvcut_variable_D_covariance.hdf5
+        cov_key: covmat
+        fixed_beta: False
+      beta_interpolation: datavector
+      likelihood:
+        form: sellentin
+        nmocks: 1000
+
+sampler:
+  mcmc:
+    max_samples: 100000
+    Rminus1_stop: 0.01
+    max_tries: 100d
+
+params:
+  fsigma8:
+    prior:
+      dist: uniform
+      min: 0.05
+      max: 1.5
+    ref:
+      dist: norm
+      loc: 0.47
+      scale: 0.05
+    proposal: 0.02
+    latex: f\sigma_8
+
+  beta:
+    prior:
+      dist: uniform
+      min: 0.2
+      max: 0.6
+    ref:
+      dist: norm
+      loc: 0.4
+      scale: 0.05
+    proposal: 0.03
+    latex: \beta
+
+  sigma_v:
+    prior:
+      dist: uniform
+      min: 100
+      max: 500
+    ref:
+      dist: norm
+      loc: 380
+      scale: 20
+    proposal: 10
+    latex: \sigma_v
+
+  epsilon:
+    prior:
+      dist: uniform
+      min: 0.8
+      max: 1.2
+    ref:
+      dist: norm
+      loc: 1.0
+      scale: 0.05
+    proposal: 0.03
+    latex: \epsilon
