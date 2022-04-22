@@ -162,7 +162,7 @@ class CCFFit(CCFModel):
 
         del input_data
 
-    def get_interpolated_redshift_multipoles(self, beta):
+    def get_interpolated_redshift_multipoles(self, beta=None):
         """
         Interpolate the redshift-space multipoles over stored grid of beta=f/b and return their values at point
 
@@ -184,12 +184,14 @@ class CCFFit(CCFModel):
                 multipoles[i] = self.redshift_multipoles[f'{ell}']
             return np.atleast_2d(multipoles)
         else:
+            if beta is None:
+                raise InputError('Need to supply a valid value of beta for interpolation')
             multipoles = np.empty((len(self.poles_s), len(self.beta_ccf), len(self.s)))
             for i, ell in enumerate(self.poles_s):
                 multipoles[i] = self.redshift_multipoles[f'{ell}']
             return np.atleast_2d(si.PchipInterpolator(self.beta_ccf, multipoles, axis=1)(beta))
 
-    def get_interpolated_covariance(self, beta):
+    def get_interpolated_covariance(self, beta=None):
         """
         Interpolate the covariance matrix over stored grid of beta=f/b and return its value at point
 
@@ -207,6 +209,8 @@ class CCFFit(CCFModel):
         if self.fixed_covmat:
             return self.covmat
         else:
+            if beta is None:
+                raise InputError('Need to supply a valid value of beta for interpolation')
             # if requested beta is outside the provided grid, return the boundary value covmat
             # for a grid of beta that is wide relative to the posterior on beta this does not affect science
             # results, but it does prevent the code from crashing when accidentally hitting a boundary
@@ -222,7 +226,7 @@ class CCFFit(CCFModel):
             t = (beta - self.beta_covmat[lowind]) / (self.beta_covmat[highind] - self.beta_covmat[lowind])
             return (1 - t) * self.covmat[lowind] + t * self.covmat[highind]
 
-    def get_interpolated_precision(self, beta):
+    def get_interpolated_precision(self, beta=None):
         """
         Interpolate the precision (=inverse covariance) matrix over stored grid of beta=f/b and return its value at point
 
@@ -240,6 +244,8 @@ class CCFFit(CCFModel):
         if self.fixed_covmat:
             return self.icov
         else:
+            if beta is None:
+                raise InputError('Need to supply a valid value of beta for interpolation')
             if beta < self.beta_covmat.min(): return self.icov[0]
             if beta > self.beta_covmat.max(): return self.icov[-1]
 
@@ -252,7 +258,7 @@ class CCFFit(CCFModel):
             t = (beta - self.beta_covmat[lowind]) / (self.beta_covmat[highind] - self.beta_covmat[lowind])
             return (1 - t) * self.icov[lowind] + t * self.icov[highind]
 
-    def correlation_matrix(self, beta):
+    def correlation_matrix(self, beta=None):
         """
         Compute the normalised correlation matrix at input value of beta
 
@@ -276,7 +282,7 @@ class CCFFit(CCFModel):
                     corrmat[i, j] = covmat[i, j] / (diagonals[i] * diagonals[j])
         return corrmat
 
-    def diagonal_errors(self, beta):
+    def diagonal_errors(self, beta=None):
         """
         Compute approximate errors in each bin of the multipole data vector from diagonal entries of the covariance
 
@@ -296,7 +302,7 @@ class CCFFit(CCFModel):
         diagonals = np.sqrt(np.diag(covmat))
         return diagonals.reshape((len(self.poles_s), len(self.s)))
 
-    def multipole_datavector(self, beta=0.4):
+    def multipole_datavector(self, beta=None):
         """
         Create the data vector composed of the stack of all redshift-space multipoles
 
@@ -382,7 +388,6 @@ class CCFFit(CCFModel):
             lowind = np.where(self.beta_ccf < beta)[0][-1]
             highind = np.where(self.beta_ccf >= beta)[0][0]
             t = (beta - self.beta_ccf[lowind]) / (self.beta_ccf[highind] - self.beta_ccf[lowind])
-            print(t, self.beta_ccf[lowind], self.beta_ccf[highind])
             params['beta'] = self.beta_ccf[lowind]
             low_chisq, low_cov = self.chi_squared(params, **kwargs)
             params['beta'] = self.beta_ccf[highind]

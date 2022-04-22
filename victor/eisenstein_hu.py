@@ -70,7 +70,7 @@ class EisensteinHu:
                        np.sqrt((17.2 * omh2)**2 + 1))
         self.beta_node = 8.41 * omh2**0.435
 
-    def get_pofk_EH(self, k):
+    def power_EH(self, k):
         """
         Compute approximation to matter power spectrum at redshift 0
 
@@ -92,7 +92,7 @@ class EisensteinHu:
         """
         Compute sigma_8, the linearised amplitude of matter fluctuations in 8 Mpc/h spheres at redshift 0
         """
-        integrand = lambda x : 1.0/(2.0 * np.pi**2) * self.get_pofk_EH(x/8.0) * (x/8.0)**3 * \
+        integrand = lambda x : 1.0/(2.0 * np.pi**2) * self.power_EH(x/8.0) * (x/8.0)**3 * \
                                (3.0/x**3 * (np.sin(x) - x * np.cos(x)))**2 / x
         sigma8_squared = quad(integrand, 1e-5, 20.0, full_output=1)[0]
         return sigma8_squared**0.5

@@ -80,9 +80,9 @@ class CCFModel:
                       'rsd_model': model.get('rsd_model', 'streaming'),
                       'kaiser_approximation': model.get('kaiser_approximation', False),
                       'kaiser_coord_shift': model.get('kaiser_coord_shift', True),
-                      'assume_isotropic_realspace': model['realspace_ccf'].get('assume_isotropic', 'True'),
+                      'assume_isotropic': model['realspace_ccf'].get('assume_isotropic', True),
                       'matter_model': self.matter_model,
-                      'excursion_set_options': model['matter_ccf'].get('excursion_set_options', None),
+                      'excursion_set_options': model['matter_ccf'].get('excursion_set_options', {}),
                       'bias': model['matter_ccf'].get('bias', 1.9),
                       'mean_model': model['matter_ccf'].get('mean_model', 'linear'),
                       'pdf_form': model['velocity_pdf'].get('form', 'gaussian'),
@@ -284,7 +284,7 @@ class CCFModel:
         sv_monopole = utils.multipoles_from_fn(sv_rmu, self.r_for_sv, ell=[0])
         self.sv_rmu = sv / sv_monopole['0'][-1]
 
-    def get_interpolated_real_multipoles(self, beta):
+    def get_interpolated_real_multipoles(self, beta=None):
         """
         Interpolate the realspace multipoles over stored grid of beta=f/b and return their values at point
 
@@ -306,6 +306,8 @@ class CCFModel:
                 multipoles[i] = self.real_multipoles[f'{ell}']
             return np.atleast_2d(multipoles)
         else:
+            if beta is None:
+                raise InputError('Need to supply a valid value of beta for interpolation')
             multipoles = np.empty((len(self.poles_r), len(self.beta), len(self.r)))
             for i, ell in enumerate(self.poles_r):
                 multipoles[i] = self.real_multipoles[f'{ell}']
@@ -343,10 +345,7 @@ class CCFModel:
 
         if model['matter_model'] == 'linear_bias':
             bias = params.get('bias', model['bias'])
-            if not self.fixed_real_input:
-                beta = params['beta']
-            else:
-                beta = 0.4 # the value is irrelevant, but this way we don't have to pass beta if it's not used
+            beta = params.get('beta', None)
             real_monopole = self.get_interpolated_real_multipoles(beta)[0]
             xir = _spline(self.r, real_monopole, ext=3)
             # perform the integral using trapz as faster than quad
@@ -501,7 +500,7 @@ class CCFModel:
         accuracy = model['excursion_set_options'].get('camb_accuracy', 1)
 
         # Initialize
-        excursion_model = get_excursion_set_model(h, omm, omb, mnu, ns, omk, self.z_eff, eisenstein_hu, camb_accuracy)
+        excursion_model = get_excursion_set_model(h, omm, omb, mnu, ns, omk, self.z_eff, eisenstein_hu, accuracy)
         excursion_model.set_normalisation(s80, z=0)
         # record the value of sigma_8 at redshift z
         self.s8z = excursion_model.s8z_fiducial * np.sqrt(excursion_model.normalisation)
@@ -559,8 +558,14 @@ class CCFModel:
         else:
             beta = params['beta']
         # following allows for differences in which combination of AP parameters are sampled
-        epsilon = params.get('epsilon', params.get('aperp', 1) / params.get('apar', 1))
-        apar = params.get('apar', params.get('alpha', 1) * params.get('epsilon', 1)**(-2/3))
+        if 'epsilon' in params:
+            epsilon = params['epsilon']
+            apar = params.get('alpha', 1) * epsilon**(-2/3)
+            aperp = epsilon * apar
+        else:
+            aperp = params.get('aperp', 1)
+            apar = params.get('apar', 1)
+            epsilon = aperp / apar
 
         # --- rescale real-space functions to account for Alcock-Paczynski dilation --- #
         mu_vals = np.linspace(1e-10, 1)
@@ -593,8 +598,8 @@ class CCFModel:
         # apply AP corrections to shift input coordinates in the fiducial cosmology to those in true cosmology
         mu_s = Mu
         mu_s[Mu>0] = 1 / np.sqrt(1 + epsilon**2 * (1 / Mu[Mu>0]**2 - 1))
-        s_perp = S * np.sqrt(1 - mu_s**2) * params.get('aperp', 1.0)
-        s_par = S * mu_s * params.get('apar', 1.0)
+        s_perp = S * np.sqrt(1 - mu_s**2) * aperp
+        s_par = S * mu_s * apar
         s = np.sqrt(s_par**2 + s_perp**2) # note this is no longer same as the input!
 
         if model['rsd_model'] in ['streaming', 'dispersion']:
@@ -626,7 +631,7 @@ class CCFModel:
                 jacobian = 1 / (1 + vr_interp(r)*self.iaH/r + self.iaH * mu_r**2 * (dvr_interp(r) - vr_interp(r)/r))
 
             # build the real-space ccf at each point
-            if model['assume_isotropic_realspace']:
+            if model['assume_isotropic']:
                 # following is equivalent to multiplying by 1, but more explicitly shows what is happening!
                 xi_rmu =  real_multipoles['0'](r) * legendre(0)(mu_r)
             else:
@@ -657,7 +662,7 @@ class CCFModel:
             mu_r = r_par / r
 
             # build the real-space ccf at each point
-            if model['assume_isotropic_realspace']:
+            if model['assume_isotropic']:
                 xi_rmu =  real_multipoles['0'](r) * legendre(0)(mu_r)
             else:
                 xi_rmu = np.zeros_like(r)
@@ -697,7 +702,7 @@ class CCFModel:
             mu_r = r_par / r
 
             # build the real-space ccf at each point
-            if model['assume_isotropic_realspace']:
+            if model['assume_isotropic']:
                 xi_rmu =  real_multipoles['0'](r) * legendre(0)(mu_r)
             else:
                 xi_rmu = np.zeros_like(r)

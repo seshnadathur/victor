@@ -4,7 +4,7 @@ likelihood:
   CCFLikelihood:
     python_path: ./victor/likelihoods/
     model:
-      input_model_data_file: data/BOSS_DR12_CMASS_data/CMASS_ReconZobovVoids_0.43z0.7_medianRcut_PatchyMean_model.hdf5
+      input_model_data_file: data/BOSS_DR12_CMASS_data/CMASS_zobovVoids_reconRs10_0.43z0.7_medianRvcut_PatchyMean_model.hdf5
       rsd_model: streaming
       z_eff: 0.57
       cosmology:
@@ -29,11 +29,11 @@ likelihood:
     data:
       redshift_space_ccf:
         reconstruction: True
-        data_file: data/BOSS_DR12_CMASS_data/CMASS_ReconZobovVoids_0.43z0.7_medianRcut_data.hdf5
+        data_file: data/BOSS_DR12_CMASS_data/CMASS_zobovVoids_reconRs10_0.43z0.7_medianRvcut_data.hdf5
         format: multipoles
         ccf_keys: ['s', 'monopole', 'quadrupole']
       covariance_matrix:
-        data_file: data/BOSS_DR12_CMASS_data/CMASS_ReconZobovVoids_0.43z0.7_medianRcut_variable_D_covariance.hdf5
+        data_file: data/BOSS_DR12_CMASS_data/CMASS_zobovVoids_reconRs10_0.43z0.7_medianRvcut_variable_D_covariance.hdf5
         cov_key: covmat
         fixed_beta: False
       beta_interpolation: datavector

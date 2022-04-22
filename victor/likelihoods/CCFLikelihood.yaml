@@ -3,7 +3,7 @@
 
 model:
 data:
-config_file: ../../example_boss_input.yaml
+config_file: config/boss_config.yaml
 
 # --- parameters for MCMC --- #
 params:

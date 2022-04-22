@@ -60,10 +60,10 @@ def shifted_color_map(cmap, start=0, midpoint=0.5, stop=1.0, name='shiftedcmap')
 
     return newcmap
 
-def plot_2D_ccf(xi_sp, rs, rp=None, even=True, cmap=mpl.cm.RdYlBu_r, vmin=-1, vmax=0.5,
-                contours=None, contour_colors='white', clabel=False, clabel_precision=2,
-                linewidths=1.2, shift=True, colorbar=True, axis_label='r', xlabel=None,
-                ylabel=None, cbar_label=None):
+def plot_2D_ccf(xi_sp, rs, rp=None, even=True, cmap=mpl.cm.RdYlBu_r, vmin=-1, vmax=0.2,
+                contours=None, contour_colors='white', clabel=False, linewidths=1.2,
+                shift=True, colorbar=True, axis_label='r', xlabel=None, ylabel=None,
+                cbar_label=None):
     """
     """
     if shift:
@@ -94,12 +94,10 @@ def plot_2D_ccf(xi_sp, rs, rp=None, even=True, cmap=mpl.cm.RdYlBu_r, vmin=-1, vm
             plt.contour(rs, -rp, xi_sp(rs, rp), contours, colors=contour_colors, linestyles='solid', linewidths=linewidths)
             plt.contour(-rs, -rp, xi_sp(rs, rp), contours, colors=contour_colors, linestyles='solid', linewidths=linewidths)
         if clabel:
-            def fmt(x):
-                precision = f'{0.1*clabel_precision}f'
-                return f"{x:.2f}"
-            plt.clabel(cs, inline=True, fontsize=10, fmt=fmt)
+            plt.clabel(cs, inline=True, fontsize=10, fmt='%1.2f')
 
     if axis_label is not None:
+        # shortcut method for labelling axes
         xlabel = r'$%s_\perp\;[h^{-1}\mathrm{Mpc}]$' % axis_label
         ylabel = r'$%s_{||}\;[h^{-1}\mathrm{Mpc}]$' % axis_label
     plt.xlabel(xlabel, fontsize=18)

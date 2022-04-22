@@ -1,7 +1,7 @@
 model:
   input_model_data_file: data/example_data/example_void_model.hdf5
   rsd_model: streaming
-  z_eff: 0.57
+  z_eff: 0.50
   cosmology:
     Omega_m: 0.31
   realspace_ccf:
