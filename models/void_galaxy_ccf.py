@@ -723,8 +723,8 @@ class VoidGalaxyCCF:
 
             # now apply appropriate conversion to get the log likelihood from this
             like_factor = 0
-            if not self.fixed_covmat:
-                # covariance matrix itself varies with beta, so need to normalise for change
+            if self.use_recon and not self.fixed_covmat:
+                # covariance matrix itself varies with beta if using reconstruction, so need to normalise for change
                 determinant = np.linalg.slogdet(cov)
                 if not determinant[0] == 1:
                     # something has gone dramatically wrong!
