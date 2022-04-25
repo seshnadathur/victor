@@ -43,7 +43,7 @@ where the `.[full]` at the end is optional and will install all the extra depend
 
 Alternatively, simply do
 ```
-python -m pip install -e git+https://github.com/seshnadathur/victor.git#egg=victor[full]
+python -m pip install -e git+https://github.com/seshnadathur/victor.git#egg=victor[all]
 ```
 (but this means you won't be able to share your changes via pull requests).
 
