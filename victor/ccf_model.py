@@ -616,11 +616,10 @@ class CCFModel:
                 jacobian = 1 # no change in variables
             else:
                 # start by iteratively solving for the mean real-space coordinate
-                r_par = s_par / (1 + self.iaH * vr_interp(s) / s)
+                r_par = (s_par - v_par * self.iaH) / (1 + self.iaH * vr_interp(s) / s)
                 for i in range(model.get('niter', 5)):
                     r = np.sqrt(s_perp**2 + r_par**2)
-                    r_par = s_par / (1 + self.iaH * vr_interp(r) / r)
-                r_par -= v_par * self.iaH
+                    r_par =  (s_par - v_par * self.iaH) / (1 + self.iaH * vr_interp(r) / r)
                 r = np.sqrt(s_perp**2 + r_par**2)
                 mu_r = r_par / r
                 # now scale the dispersion function for AP dilation and then evaluate
