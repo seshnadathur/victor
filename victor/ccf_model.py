@@ -84,9 +84,9 @@ class CCFModel:
                       'matter_model': self.matter_model,
                       'excursion_set_options': model['matter_ccf'].get('excursion_set_options', {}),
                       'bias': model['matter_ccf'].get('bias', 1.9),
-                      'mean_model': model['matter_ccf'].get('mean_model', 'linear'),
+                      'mean_model': model['velocity_pdf']['mean'].get('model', 'linear'),
                       'pdf_form': model['velocity_pdf'].get('form', 'gaussian'),
-                      'empirical_corr': model['velocity_pdf'].get('empirical_corr', False),
+                      'empirical_corr': model['velocity_pdf']['mean'].get('empirical_corr', False),
                      }
 
     def _load_realspace_ccf(self, realspace_ccf, input_data):
