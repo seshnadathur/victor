@@ -14,7 +14,7 @@ likelihood:
         beta_key: beta
         format: multipoles
         ccf_keys: ['r', 'monopole', 'quadrupole']
-        assume_isotropic_realspace: True
+        assume_isotropic: True
       matter_ccf:
         model: template
         template_keys: ['rdelta', 'delta']
