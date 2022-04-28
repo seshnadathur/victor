@@ -37,7 +37,7 @@ git clone https://YOUR_USERNAME@github.com/YOUR_USERNAME/victor.git
 ```
 and then install in editable mode using
 ```
-pythom -m pip install -e .[all]
+python -m pip install -e .[all]
 ```
 where the `.[full]` at the end is optional and will install all the extra dependencies as above. (See (here)[https://stackoverflow.com/questions/30239152/specify-extras-require-with-pip-install-e] if you use `zsh` instead of `bash`.)
 
