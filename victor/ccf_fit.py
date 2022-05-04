@@ -273,7 +273,7 @@ class CCFFit(CCFModel):
             A 2D array containing the correlation matrix
         """
 
-        covmat = self.get_interpolated_covmat(beta)
+        covmat = self.get_interpolated_covariance(beta)
         corrmat = np.zeros_like(covmat)
         diagonals = np.sqrt(np.diag(covmat))
         for i in range(corrmat.shape[0]):
