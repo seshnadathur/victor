@@ -181,7 +181,7 @@ class CCFModel:
         if not self.template_sigma8:
             raise InputError('When using template model for the matter ccf, template_sigma8 must be provided')
         template_keys = np.atleast_1d(matter_ccf.get('template_keys'))
-        integrated = matter_ccf.get('integrated', 'False')
+        integrated = matter_ccf.get('integrated', False)
 
         # check the ccf keys
         if not len(template_keys)==2:
