@@ -76,8 +76,7 @@ class CCFModel:
         # set of model options: these settings provide the default to be used in automated evaluations
         # (eg when running chains), but can be overridden by the user passing an optional dict at the
         # time of model evaluation (eg when debugging or plotting)
-        self.model = {'cosmology': model.get('cosmology'),
-                      'rsd_model': model.get('rsd_model', 'streaming'),
+        self.model = {'rsd_model': model.get('rsd_model', 'streaming'),
                       'kaiser_approximation': model.get('kaiser_approximation', False),
                       'kaiser_coord_shift': model.get('kaiser_coord_shift', True),
                       'assume_isotropic': model['realspace_ccf'].get('assume_isotropic', True),
@@ -422,7 +421,7 @@ class CCFModel:
                 dvr = -growth_term * (delta(r) - 2 * int_delta(r) / 3) / self.iaH
             else:
                 # add multiplicative empirical correction factor (1 + Av*delta(r))
-                Av = params.get('Av', model.get('Av', 0)) # defaults to 0 unless sampled/set
+                Av = params.get('Av', 0) # defaults to 0 unless sampled/set
                 vr = -growth_term * r * int_delta(r) * (1 + Av * delta(r)) / (3 * self.iaH)
                 # build a finer grid to better estimate derivative numerically
                 rgrid = np.linspace(0.1, self.r.max(), 100)
@@ -432,7 +431,7 @@ class CCFModel:
         if model['mean_model'] == 'nonlinear':
             excursion_model = self.set_ESM_params(params, model)
             # model prediction for derivative of enclosed density wrt log scale factor
-            logderiv_Delta = excursion_model.density_evolution(self.z_eff, param['b10'], params['b01'], params['Rp'],
+            logderiv_Delta = excursion_model.density_evolution(self.z_eff, params['b10'], params['b01'], params['Rp'],
                                                                params['Rx'], deltac=params.get('deltac', 1.686),
                                                                r_max=np.max(r))
             if not model['empirical_corr']:
@@ -445,7 +444,7 @@ class CCFModel:
                 dvr = dvr_interp(r)
             else:
                 # add multiplicative empirical correction factor (1 + Av*delta(r))
-                Av = params.get('Av', model.get('Av', 0)) # defaults to 0 unless sampled/set
+                Av = params.get('Av', 0) # defaults to 0 unless sampled/set
                 vr = -growth_term * r * logderiv_Delta(r) * (1 + Av * delta(r))/ (3 * self.iaH * (1 + delta(r)))
                 # build a finer grid to better estimate derivative numerically
                 rgrid = np.linspace(0.1, self.r.max(), 100)
@@ -488,11 +487,11 @@ class CCFModel:
                 raise InputError(f'set_ESM_params: Parameter {chk} is required for ESM calculation but not provided')
 
         # assign all other parameter values
-        omm = params.get('Omega_m', model['cosmology'].get('Omega_m', 0.31))
-        omk = params.get('Omega_k', model['cosmology'].get('Omega_k', 0))
-        omb = params.get('Omega_b', model['cosmology'].get('Omega_b', 0.048))
-        s80 = params.get('sigma_8_0', model['cosmology'].get('sigma_8', 0.81))
-        h = params.get('H0', model['cosmology'].get('H0', 67.5)) / 100
+        omm = params.get('Omega_m', 0.31)
+        omk = params.get('Omega_k', 0)
+        omb = params.get('Omega_b', 0.048)
+        s80 = params.get('sigma_8_0', 0.81)
+        h = params.get('H0', 67.5) / 100
         ns = params.get('ns', 0.96)
         mnu = params.get('mnu', 0.96)
         deltac = params.get('delta_c', 1.686)
@@ -578,13 +577,14 @@ class CCFModel:
         for i, ell in enumerate(self.poles_r):
             real_multipoles[f'{ell}'] = _spline(rescaled_r, ccf_mult[i], ext=3)
         # velocity terms: note here the little hack to get an estimate at r=0 which helps control an interpolation
-        # artifact that affects the only the approximate Kaiser and special Euclid calculations (it is also only
+        # artifact that affects only the approximate Kaiser and special Euclid calculations (it is also only
         # cosmetic, but this helps produce nicer figures)
         vr, dvr = self.velocity_terms(np.append([0.01], reference_r), params, **kwargs)
         if model['matter_model'] == 'excursion_set':
             # this is a special case: as the model predicts the absolute scale of void-matter ccf we do not rescale
-            # in principle, means using void size as standard ruler; in practice has very little information because
-            # of the additional nuisance parameters (and because realspace multipoles of xi still get rescaled)
+            # in principle, means using shape of void-matter ccf monopole to extract information; in practice this has 
+            # very little information because of the additional nuisance parameters (and because realspace multipoles 
+            # of xi still get rescaled)
             vr_interp = _spline(np.append([0.01], reference_r), vr, ext=3)
             dvr_interp = _spline(np.append([0.01], reference_r), dvr, ext=3)
         else:
