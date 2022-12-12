@@ -559,10 +559,10 @@ class CCFFit(CCFModel):
 
             theory = self.theory_multipoles(s, params, poles=ell, **options)[f'{ell}']
             ind = [0, 2, 4].index(ell)
-            errs = self.diagonal_errors(params['beta'])[ind]
-            data = self.get_interpolated_redshift_multipoles(params['beta'])[ind]
+            errs = self.diagonal_errors(params.get('beta', None))[ind]
+            data = self.get_interpolated_redshift_multipoles(params.get('beta', None))[ind]
             if diff:
-                real_mult = self.get_interpolated_real_multipoles(params['beta'])[ind]
+                real_mult = self.get_interpolated_real_multipoles(params.get('beta', None))[ind]
                 refth = np.interp(s, self.r, real_mult)
                 refdata = np.interp(self.s, self.r, real_mult)
             else:
