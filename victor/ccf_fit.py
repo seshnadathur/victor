@@ -346,9 +346,9 @@ class CCFFit(CCFModel):
         """
 
         theory_vector = self.theory_multipole_vector(self.s, params, self.poles_s, **kwargs)
-        data_vector = self.multipole_datavector(params['beta'])
-        cov = self.get_interpolated_covariance(params['beta'])
-        icov = self.get_interpolated_precision(params['beta'])
+        data_vector = self.multipole_datavector(params.get('beta', None))
+        cov = self.get_interpolated_covariance(params.get('beta', None))
+        icov = self.get_interpolated_precision(params.get('beta', None))
 
         return np.dot(np.dot(theory_vector - data_vector, icov), theory_vector - data_vector), cov
 
