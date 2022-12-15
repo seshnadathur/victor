@@ -457,7 +457,7 @@ class CCFModel:
             vr = self.radial_velocity(r)
             # build a finer grid to better estimate derivative numerically
             rgrid = np.linspace(0.1, self.r.max(), 100)
-            dvr_interp = _spline(rgrid, np.gradient(self.radial_velocity(r_grid), rgrid), ext=3)
+            dvr_interp = _spline(rgrid, np.gradient(self.radial_velocity(rgrid), rgrid), ext=3)
             dvr = dvr_interp(r)
 
         return vr, dvr
