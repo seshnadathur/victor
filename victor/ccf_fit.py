@@ -5,6 +5,7 @@ import numpy as np
 import scipy.interpolate as si
 from .utils import InputError
 from .ccf_model import CCFModel
+import matplotlib.pyplot as plt
 
 class CCFFit(CCFModel):
     """
@@ -83,7 +84,7 @@ class CCFFit(CCFModel):
         if bad_keys: raise InputError(f'Wrong number of redshift-space ccf keys provided for format {format}')
         for key in ccf_keys:
             if not key in input_data:
-                raise InputError(f'Key {key} not found in file {data_fn}')
+                raise InputError(f'Key {key} not found in file {input_fn}')
 
         if format=='multipoles':
             self.s = input_data[ccf_keys[0]]
@@ -146,7 +147,7 @@ class CCFFit(CCFModel):
 
         cov_key = covariance['cov_key']
         if not cov_key in input_data:
-            raise InputError(f'Key {cov_key} not found in file {cov_fn}')
+            raise InputError(f'Key {cov_key} not found in file {input_fn}')
         covmat = input_data[cov_key]
 
         # sense check the data
@@ -434,6 +435,7 @@ class CCFFit(CCFModel):
                 lnlike_high = -0.5 * high_chisq + high_like_factor
             else:
                 raise InputError('Unrecognised likelihood form')
+            like_factor = (low_like_factor, high_like_factor)
             lnlike = (1 - t) * lnlike_low + t * lnlike_high
             chisq =  (1 - t) * low_chisq + t * high_chisq
         else:
