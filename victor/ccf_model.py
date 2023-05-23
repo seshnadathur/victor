@@ -217,6 +217,7 @@ class CCFModel:
         # model of the mean of the velocity pdf
         mean_model = velocity_pdf['mean'].get('model', 'linear')
         if mean_model=='template':  # template option sometimes used for specific testing
+            self.template_f = velocity_pdf.get('template_f', None)
             template_keys = np.atleast_1d(velocity_pdf['mean'].get('template_keys'))
             if not len(template_keys) == 2:
                 raise InputError(f'{len(template_keys)} velocity mean template keys provided, require 2')
@@ -401,6 +402,16 @@ class CCFModel:
         delta = _spline(r, delta_r, ext=3)
         int_delta = _spline(r, integrated_delta_r, ext=3)
 
+        # following allows for differences in which combination of AP parameters are sampled
+        if 'epsilon' in params:
+            epsilon = params['epsilon']
+            apar = params.get('alpha', 1) * epsilon**(-2/3)
+        else:
+            apar = params.get('apar', 1)
+
+        # AP rescaling to get the true Hubble parameter
+        iaH_true = self.iaH / apar
+
         # set the term proportional to growth rate: different in different models
         if model['matter_model'] == 'linear_bias':
             # here we want to multiply by growth rate f alone, since there is a 1/b factor already included
@@ -412,20 +423,22 @@ class CCFModel:
         if model['matter_model'] == 'excursion_set':
             # just multiply by f alone
             growth_term = params['f']
+        if model['mean_model'] == 'template':
+           growth_term = params['fsigma8'] / self.template_sigma8 / self.template_f
 
         # now the actual velocity profile calculation
         if model['mean_model'] == 'linear':
             # simplest linearised form of the continuity equation, potentially with an empirical correction
             if not model['empirical_corr']:
-                vr = -growth_term * r * int_delta(r) / (3 * self.iaH)
-                dvr = -growth_term * (delta(r) - 2 * int_delta(r) / 3) / self.iaH
+                vr = -growth_term * r * int_delta(r) / (3 * iaH_true)
+                dvr = -growth_term * (delta(r) - 2 * int_delta(r) / 3) / iaH_true
             else:
                 # add multiplicative empirical correction factor (1 + Av*delta(r))
                 Av = params.get('Av', 0) # defaults to 0 unless sampled/set
-                vr = -growth_term * r * int_delta(r) * (1 + Av * delta(r)) / (3 * self.iaH)
+                vr = -growth_term * r * int_delta(r) * (1 + Av * delta(r)) / (3 * iaH_true)
                 # build a finer grid to better estimate derivative numerically
                 rgrid = np.linspace(0.1, self.r.max(), 100)
-                vr_grid = -growth_term * rgrid * int_delta(rgrid) * (1 + Av * delta(rgrid)) / (3 * self.iaH)
+                vr_grid = -growth_term * rgrid * int_delta(rgrid) * (1 + Av * delta(rgrid)) / (3 * iaH_true)
                 dvr_interp = _spline(rgrid, np.gradient(vr_grid, rgrid), ext=3)
                 dvr = dvr_interp(r)
         if model['mean_model'] == 'nonlinear':
@@ -436,27 +449,29 @@ class CCFModel:
                                                                r_max=np.max(r))
             if not model['empirical_corr']:
                 # fully non-linear continuity equation
-                vr = -growth_term * r * logderiv_Delta(r) / (3 * self.iaH * (1 + delta(r)))
+                vr = -growth_term * r * logderiv_Delta(r) / (3 * iaH_true * (1 + delta(r)))
                 # build a finer grid to better estimate derivative numerically
                 rgrid = np.linspace(0.1, self.r.max(), 100)
-                vr_grid = -growth_term * rgrid * logderiv_Delta(rgrid) / (3 * self.iaH * (1 + delta(rgrid)))
+                vr_grid = -growth_term * rgrid * logderiv_Delta(rgrid) / (3 * iaH_true * (1 + delta(rgrid)))
                 dvr_interp = _spline(rgrid, np.gradient(vr_grid, rgrid), ext=3)
                 dvr = dvr_interp(r)
             else:
                 # add multiplicative empirical correction factor (1 + Av*delta(r))
                 Av = params.get('Av', 0) # defaults to 0 unless sampled/set
-                vr = -growth_term * r * logderiv_Delta(r) * (1 + Av * delta(r))/ (3 * self.iaH * (1 + delta(r)))
+                vr = -growth_term * r * logderiv_Delta(r) * (1 + Av * delta(r))/ (3 * iaH_true * (1 + delta(r)))
                 # build a finer grid to better estimate derivative numerically
                 rgrid = np.linspace(0.1, self.r.max(), 100)
-                vr_grid = -growth_term * rgrid * logderiv_Delta(rgrid) / (3 * self.iaH * (1 + delta(rgrid)))
+                vr_grid = -growth_term * rgrid * logderiv_Delta(rgrid) / (3 * iaH_true * (1 + delta(rgrid)))
                 dvr_interp = _spline(rgrid, np.gradient(vr_grid, rgrid), ext=3)
                 dvr = dvr_interp(r)
         if model['mean_model'] == 'template':
             if not self.has_velocity_template:
                 raise InputError('velocity_terms: Cannot use template option as no template has been supplied.')
-            vr = self.radial_velocity(r)
+            iaH_mock = 1. / model['velocity_pdf'].get('aH_template', 1./iaH_true)
+            vr = self.radial_velocity(r) * iaH_true / iaH_mock * growth_term
             # build a finer grid to better estimate derivative numerically
             rgrid = np.linspace(0.1, self.r.max(), 100)
+            vr_grid = self.radial_velocity(rgrid)  * iaH_true / iaH_mock * growth_term
             dvr_interp = _spline(rgrid, np.gradient(self.radial_velocity(rgrid), rgrid), ext=3)
             dvr = dvr_interp(r)
 
