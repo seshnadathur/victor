@@ -567,8 +567,13 @@ class CCFModel:
             epsilon = aperp / apar
 
         # --- rescale real-space functions to account for Alcock-Paczynski dilation --- #
-        mu_vals = np.linspace(1e-10, 1)
-        mu_integral = np.trapz(apar * np.sqrt(1 + (1 - mu_vals**2) * (epsilon**2 - 1)), mu_vals)
+        # rescale templates by some isotropic rescaling factor astar; if not sampling over astar, 
+        # use the AP parameters to determine the rescaling factor 
+        if 'astar' in params:
+            mu_integral = params['astar']
+        else: 
+            mu_vals = np.linspace(1e-10, 1)
+            mu_integral = np.trapz(apar * np.sqrt(1 + (1 - mu_vals**2) * (epsilon**2 - 1)), mu_vals)
         reference_r = self.r
         rescaled_r = reference_r * mu_integral
         # real-space correlation
