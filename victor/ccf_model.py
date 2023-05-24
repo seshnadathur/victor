@@ -467,7 +467,7 @@ class CCFModel:
         if model['mean_model'] == 'template':
             if not self.has_velocity_template:
                 raise InputError('velocity_terms: Cannot use template option as no template has been supplied.')
-            iaH_mock = 1. / model['velocity_pdf'].get('aH_template', 1./iaH_true)
+            iaH_mock = 1. / model['velocity_pdf'].get('template_aH', 1./iaH_true)
             vr = self.radial_velocity(r) * iaH_true / iaH_mock * growth_term
             # build a finer grid to better estimate derivative numerically
             rgrid = np.linspace(0.1, self.r.max(), 100)
