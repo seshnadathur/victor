@@ -407,6 +407,12 @@ class CCFModel:
             # here we want to multiply by growth rate f alone, since there is a 1/b factor already included
             # in delta and int_delta; we obtain this as beta*b (so that bias values cancel out)
             growth_term = params['beta'] * params.get('bias', model['bias'])
+            if not model['realspace_ccf_from_data']:
+                # when supplying a template real-space ccf we still assume the same scaling as for the template model
+                self.template_sigma8 = model['realspace_ccf'].get('template_sigma8', None)
+                if not self.template_sigma8:
+                    raise InputError('When using linear bias for the matter ccf and the real-space ccf is from a template, template_sigma8 must be provided')
+                growth_term = params['fsigma8'] / self.template_sigma8
         if model['matter_model'] == 'template':
             # here we want to rescale the template by sigma8 / sigma8_template as well as multiply by f
             growth_term = params['fsigma8'] / self.template_sigma8
