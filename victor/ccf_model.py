@@ -596,7 +596,7 @@ class CCFModel:
             dvr_interp = _spline(np.append([0.01*mu_integral], rescaled_r), dvr, ext=3)
         if model['rsd_model'] in ['streaming', 'dispersion']:
             # we will rescale the actual dispersion function later, but scale the amplitude with apar here
-            sigma_v = params.get('sigma_v', 380) * apar
+            sigma_v = params.get('sigma_v', 380)
 
         # apply AP corrections to shift input coordinates in the fiducial cosmology to those in true cosmology
         mu_s = Mu
