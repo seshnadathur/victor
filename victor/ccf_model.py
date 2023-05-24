@@ -80,6 +80,7 @@ class CCFModel:
                       'kaiser_approximation': model.get('kaiser_approximation', False),
                       'kaiser_coord_shift': model.get('kaiser_coord_shift', True),
                       'assume_isotropic': model['realspace_ccf'].get('assume_isotropic', True),
+                      'realspace_ccf_from_data': model['realspace_ccf'].get('from_data', False),
                       'matter_model': self.matter_model,
                       'excursion_set_options': model['matter_ccf'].get('excursion_set_options', {}),
                       'bias': model['matter_ccf'].get('bias', 1.9),
@@ -574,8 +575,11 @@ class CCFModel:
         # real-space correlation
         ccf_mult = self.get_interpolated_real_multipoles(beta)
         real_multipoles  = {}
-        for i, ell in enumerate(self.poles_r):
-            real_multipoles[f'{ell}'] = _spline(rescaled_r, ccf_mult[i], ext=3)
+        for i, ell in enumerate(self.poles_r): 
+            if model['realspace_ccf_from_data']:
+                real_multipoles[f'{ell}'] = _spline(reference_r, ccf_mult[i], ext=3)
+            else:
+                real_multipoles[f'{ell}'] = _spline(rescaled_r, ccf_mult[i], ext=3)
         # velocity terms: note here the little hack to get an estimate at r=0 which helps control an interpolation
         # artifact that affects only the approximate Kaiser and special Euclid calculations (it is also only
         # cosmetic, but this helps produce nicer figures)
@@ -629,6 +633,13 @@ class CCFModel:
                 # as we've changed variables account for this in the Jacobian
                 jacobian = 1 / (1 + vr_interp(r)*self.iaH/r + self.iaH * mu_r**2 * (dvr_interp(r) - vr_interp(r)/r))
 
+            # if the real-space CCF comes from the data, not a template, apply inverse AP corrections
+            # to shift coordinates from true cosmology to the fiducial one and evaluate CCF at these adjusted positions
+            if model['realspace_ccf_from_data']:
+               r_par_fid  = r_par/apar
+               r_perp_fid = s_perp/aperp
+               r = np.sqrt(r_par_fid**2  + r_perp_fid**2)
+               mu_r = r_par_fid/r 
             # build the real-space ccf at each point
             if model['assume_isotropic']:
                 # following is equivalent to multiplying by 1, but more explicitly shows what is happening!
