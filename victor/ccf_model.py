@@ -566,6 +566,9 @@ class CCFModel:
             apar = params.get('apar', 1)
             epsilon = aperp / apar
 
+        # AP rescaling to get the true Hubble parameter
+        iaH_true = self.iaH / apar
+
         # --- rescale real-space functions to account for Alcock-Paczynski dilation --- #
         mu_vals = np.linspace(1e-10, 1)
         mu_integral = np.trapz(apar * np.sqrt(1 + (1 - mu_vals**2) * (epsilon**2 - 1)), mu_vals)
@@ -606,7 +609,7 @@ class CCFModel:
 
             v_par = X * sigma_v # range of integration large enough to converge to integral over (-infty, infty)
             if model['rsd_model'] == 'streaming':
-                r_par = s_par - v_par * self.iaH
+                r_par = s_par - v_par * iaH_true
                 r = np.sqrt(s_perp**2 + r_par**2)
                 mu_r = r_par / r
                 # now scale the dispersion function for AP dilation and then evaluate
@@ -616,10 +619,10 @@ class CCFModel:
                 jacobian = 1 # no change in variables
             else:
                 # start by iteratively solving for the mean real-space coordinate
-                r_par = (s_par - v_par * self.iaH) / (1 + self.iaH * vr_interp(s) / s)
+                r_par = (s_par - v_par * iaH_true) / (1 + iaH_true * vr_interp(s) / s)
                 for i in range(model.get('niter', 5)):
                     r = np.sqrt(s_perp**2 + r_par**2)
-                    r_par =  (s_par - v_par * self.iaH) / (1 + self.iaH * vr_interp(r) / r)
+                    r_par =  (s_par - v_par * iaH_true) / (1 + iaH_true * vr_interp(r) / r)
                 r = np.sqrt(s_perp**2 + r_par**2)
                 mu_r = r_par / r
                 # now scale the dispersion function for AP dilation and then evaluate
@@ -627,7 +630,7 @@ class CCFModel:
                 sv = sigma_v * sv_spl.ev(r, mu_r)
                 vel_pdf = norm.pdf(v_par, loc=0, scale=sv)
                 # as we've changed variables account for this in the Jacobian
-                jacobian = 1 / (1 + vr_interp(r)*self.iaH/r + self.iaH * mu_r**2 * (dvr_interp(r) - vr_interp(r)/r))
+                jacobian = 1 / (1 + vr_interp(r)*iaH_true/r + iaH_true * mu_r**2 * (dvr_interp(r) - vr_interp(r)/r))
 
             # build the real-space ccf at each point
             if model['assume_isotropic']:
@@ -649,10 +652,10 @@ class CCFModel:
 
             if model.get('kaiser_coord_shift', True):
                 # solve iteratively for mean real-space coordinate
-                r_par = s_par / (1 + M * self.iaH * vr_interp(s) / s)
+                r_par = s_par / (1 + M * iaH_true * vr_interp(s) / s)
                 for i in range(model.get('niter', 5)):
                     r = np.sqrt(s_perp**2 + r_par**2)
-                    r_par = s_par / (1 + M * self.iaH * vr_interp(r) / r)
+                    r_par = s_par / (1 + M * iaH_true * vr_interp(r) / r)
             else:
                 # NOTE: this is incorrect! it is included only to allow users to reproduce results in some
                 # previous papers which do not include the coordinate shift!
@@ -671,12 +674,12 @@ class CCFModel:
             # we now obtain the model without integration (ie assuming the velocity pdf is a delta function)
             if not model.get('kaiser_approximation', False):
                 # use full expression for Jacobian but with added nuisance parameters M and Q
-                jacobian = 1 / (1 + M*vr_interp(r)*self.iaH/r + M*Q*mu_r**2*self.iaH*(dvr_interp(r) - vr_interp(r)/r))
+                jacobian = 1 / (1 + M*vr_interp(r)*iaH_true/r + M*Q*mu_r**2*iaH_true*(dvr_interp(r) - vr_interp(r)/r))
                 xi_smu = (1 + M * xi_rmu) * jacobian - 1
             else:
                 # approximate Jacobian by a series expansion truncated at linear order in velocity terms (note the nuisance
                 # parameters M and Q as well) and also truncate expression for xi_smu to same order
-                xi_smu = M * (xi_rmu - vr_interp(r)*self.iaH/r - Q*mu_r**2*self.iaH*(dvr_interp(r) - vr_interp(r)/r))
+                xi_smu = M * (xi_rmu - vr_interp(r)*iaH_true/r - Q*mu_r**2*iaH_true*(dvr_interp(r) - vr_interp(r)/r))
 
             # drop the unnecessary dimension
             xi_smu = xi_smu[:, :, 0]
@@ -689,10 +692,10 @@ class CCFModel:
 
             if model.get('kaiser_coord_shift', True):
                 # solve iteratively for mean real-space coordinate
-                r_par = s_par / (1 + M * self.iaH * vr_interp(s) / s)
+                r_par = s_par / (1 + M * iaH_true * vr_interp(s) / s)
                 for i in range(model.get('niter', 5)):
                     r = np.sqrt(s_perp**2 + r_par**2)
-                    r_par = s_par / (1 + M * self.iaH * vr_interp(r) / r)
+                    r_par = s_par / (1 + M * iaH_true * vr_interp(r) / r)
             else:
                 # NOTE: this is incorrect! it is included only to allow users to reproduce results in some
                 # previous papers which do not include the coordinate shift!
@@ -710,7 +713,7 @@ class CCFModel:
 
             # we now obtain the model without integration (ie assuming the velocity pdf is a delta function)
             # NOTE: the new factors of 3 and 2 on the second and third terms respectively!
-            xi_smu = M * (xi_rmu - 3*vr_interp(r)*self.iaH/r - 2*Q*mu_r**2*self.iaH*(dvr_interp(r) - vr_interp(r)/r))
+            xi_smu = M * (xi_rmu - 3*vr_interp(r)*iaH_true/r - 2*Q*mu_r**2*iaH_true*(dvr_interp(r) - vr_interp(r)/r))
 
             # drop the unnecessary dimension
             xi_smu = xi_smu[:, :, 0]
