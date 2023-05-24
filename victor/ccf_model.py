@@ -671,6 +671,16 @@ class CCFModel:
             r = np.sqrt(s_perp**2 + r_par**2)
             mu_r = r_par / r
 
+            # evaluate velocity terms in the Jacobian with added nuisance parameters M and Q
+            J = M*vr_interp(r)*self.iaH/r + M*Q*mu_r**2*self.iaH*(dvr_interp(r) - vr_interp(r)/r)
+
+            # if the real-space CCF comes from the data, not a template, apply inverse AP corrections
+            # to shift coordinates from true cosmology to the fiducial one and evaluate CCF at these adjusted positions
+            if model['realspace_ccf_from_data']:
+               r_par_fid  = r_par/apar
+               r_perp_fid = s_perp/aperp
+               r = np.sqrt(r_par_fid**2  + r_perp_fid**2)
+               mu_r = r_par_fid/r 
             # build the real-space ccf at each point
             if model['assume_isotropic']:
                 xi_rmu =  real_multipoles['0'](r) * legendre(0)(mu_r)
@@ -682,12 +692,13 @@ class CCFModel:
             # we now obtain the model without integration (ie assuming the velocity pdf is a delta function)
             if not model.get('kaiser_approximation', False):
                 # use full expression for Jacobian but with added nuisance parameters M and Q
-                jacobian = 1 / (1 + M*vr_interp(r)*self.iaH/r + M*Q*mu_r**2*self.iaH*(dvr_interp(r) - vr_interp(r)/r))
+                jacobian = 1 / (1 + J)
                 xi_smu = (1 + M * xi_rmu) * jacobian - 1
             else:
                 # approximate Jacobian by a series expansion truncated at linear order in velocity terms (note the nuisance
                 # parameters M and Q as well) and also truncate expression for xi_smu to same order
-                xi_smu = M * (xi_rmu - vr_interp(r)*self.iaH/r - Q*mu_r**2*self.iaH*(dvr_interp(r) - vr_interp(r)/r))
+                jacobian = -J
+                xi_smu = M * xi_rmu + jacobian
 
             # drop the unnecessary dimension
             xi_smu = xi_smu[:, :, 0]
@@ -711,6 +722,16 @@ class CCFModel:
             r = np.sqrt(s_perp**2 + r_par**2)
             mu_r = r_par / r
 
+            # NOTE: the new factors of 3 and 2 on the first and second terms respectively!
+            J = 3*M*vr_interp(r)*self.iaH/r + 2*M*Q*mu_r**2*self.iaH*(dvr_interp(r) - vr_interp(r)/r)
+
+            # if the real-space CCF comes from the data, not a template, apply inverse AP corrections
+            # to shift coordinates from true cosmology to the fiducial one and evaluate CCF at these adjusted positions
+            if model['realspace_ccf_from_data']:
+               r_par_fid  = r_par/apar
+               r_perp_fid = s_perp/aperp
+               r = np.sqrt(r_par_fid**2  + r_perp_fid**2)
+               mu_r = r_par_fid/r 
             # build the real-space ccf at each point
             if model['assume_isotropic']:
                 xi_rmu =  real_multipoles['0'](r) * legendre(0)(mu_r)
@@ -720,8 +741,7 @@ class CCFModel:
                     xi_rmu = xi_rmu + real_multipoles[f'{ell}'](r) * legendre(ell)(mu_r)
 
             # we now obtain the model without integration (ie assuming the velocity pdf is a delta function)
-            # NOTE: the new factors of 3 and 2 on the second and third terms respectively!
-            xi_smu = M * (xi_rmu - 3*vr_interp(r)*self.iaH/r - 2*Q*mu_r**2*self.iaH*(dvr_interp(r) - vr_interp(r)/r))
+            xi_smu = M * xi_rmu - J
 
             # drop the unnecessary dimension
             xi_smu = xi_smu[:, :, 0]
