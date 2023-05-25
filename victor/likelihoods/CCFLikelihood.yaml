@@ -18,6 +18,7 @@ params:
   apar:
     value: "lambda alpha, epsilon: alpha * epsilon**(-2/3)"
     latex: \alpha_{||}
+  astar: -1
   sigma_v: 380
   Av: 0
   f: 0.778
