@@ -570,11 +570,9 @@ class CCFModel:
         # rescale templates by some isotropic rescaling factor astar; if not sampling over astar, 
         # use the AP parameters to determine the rescaling factor 
         if params.get('astar', -1) < 0:
-            print('mu integral')
             mu_vals = np.linspace(1e-10, 1)
             mu_integral = np.trapz(apar * np.sqrt(1 + (1 - mu_vals**2) * (epsilon**2 - 1)), mu_vals)
         else: 
-            print('astar')
             mu_integral = params['astar']
         reference_r = self.r
         rescaled_r = reference_r * mu_integral
