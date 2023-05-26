@@ -410,7 +410,7 @@ class CCFModel:
             apar = params.get('apar', 1)
 
         # AP rescaling to get the true Hubble parameter
-        iaH_true = self.iaH / apar
+        iaH_true = self.iaH * apar
 
         # set the term proportional to growth rate: different in different models
         if model['matter_model'] == 'linear_bias':
