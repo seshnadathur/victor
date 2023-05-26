@@ -567,7 +567,7 @@ class CCFModel:
             epsilon = aperp / apar
 
         # AP rescaling to get the true Hubble parameter
-        iaH_true = self.iaH / apar
+        iaH_true = self.iaH * apar
 
         # --- rescale real-space functions to account for Alcock-Paczynski dilation --- #
         mu_vals = np.linspace(1e-10, 1)
