@@ -69,6 +69,12 @@ class CCFModel:
 
         self._load_realspace_ccf(model['realspace_ccf'], input_data)
         self.matter_model = model['matter_ccf'].get('model', 'linear_bias')
+        self.realspace_ccf_from_data = model['realspace_ccf'].get('from_data', False)
+        if self.matter_model == 'linear_bias' and not self.realspace_ccf_from_data:
+            # when supplying a template real-space ccf we still assume the same scaling as for the template model
+            self.template_sigma8 = model['realspace_ccf'].get('template_sigma8', None)
+            if not self.template_sigma8:
+                raise InputError('When using linear bias for the matter ccf and the real-space ccf is from a template, template_sigma8 must be provided')
         if self.matter_model == 'template':
             self._set_matter_ccf_template(model['matter_ccf'], input_data)
         self._set_velocity_pdf(model['velocity_pdf'], input_data)
@@ -80,7 +86,7 @@ class CCFModel:
                       'kaiser_approximation': model.get('kaiser_approximation', False),
                       'kaiser_coord_shift': model.get('kaiser_coord_shift', True),
                       'assume_isotropic': model['realspace_ccf'].get('assume_isotropic', True),
-                      'realspace_ccf_from_data': model['realspace_ccf'].get('from_data', False),
+                      'realspace_ccf_from_data': self.realspace_ccf_from_data,
                       'matter_model': self.matter_model,
                       'excursion_set_options': model['matter_ccf'].get('excursion_set_options', {}),
                       'bias': model['matter_ccf'].get('bias', 1.9),
@@ -408,10 +414,6 @@ class CCFModel:
             # in delta and int_delta; we obtain this as beta*b (so that bias values cancel out)
             growth_term = params['beta'] * params.get('bias', model['bias'])
             if not model['realspace_ccf_from_data']:
-                # when supplying a template real-space ccf we still assume the same scaling as for the template model
-                self.template_sigma8 = model['realspace_ccf'].get('template_sigma8', None)
-                if not self.template_sigma8:
-                    raise InputError('When using linear bias for the matter ccf and the real-space ccf is from a template, template_sigma8 must be provided')
                 growth_term = params['fsigma8'] / self.template_sigma8
         if model['matter_model'] == 'template':
             # here we want to rescale the template by sigma8 / sigma8_template as well as multiply by f
