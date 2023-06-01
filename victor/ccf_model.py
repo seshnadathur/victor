@@ -218,6 +218,9 @@ class CCFModel:
         mean_model = velocity_pdf['mean'].get('model', 'linear')
         if mean_model=='template':  # template option sometimes used for specific testing
             self.template_f = velocity_pdf.get('template_f', None)
+            self.template_aH = velocity_pdf.get('template_aH', None)
+            if not self.template_f or not self.template_aH:
+                raise InputError('When using template model for the velocity pdf, template_f and template_aH must be provided')
             template_keys = np.atleast_1d(velocity_pdf['mean'].get('template_keys'))
             if not len(template_keys) == 2:
                 raise InputError(f'{len(template_keys)} velocity mean template keys provided, require 2')
@@ -467,7 +470,7 @@ class CCFModel:
         if model['mean_model'] == 'template':
             if not self.has_velocity_template:
                 raise InputError('velocity_terms: Cannot use template option as no template has been supplied.')
-            iaH_mock = 1. / model['velocity_pdf'].get('template_aH', 1./iaH_true)
+            iaH_mock = 1. / self.template_aH
             vr = self.radial_velocity(r) * iaH_true / iaH_mock * growth_term
             # build a finer grid to better estimate derivative numerically
             rgrid = np.linspace(0.1, self.r.max(), 100)
