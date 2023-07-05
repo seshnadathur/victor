@@ -224,6 +224,11 @@ class CCFModel:
         # model of the mean of the velocity pdf
         mean_model = velocity_pdf['mean'].get('model', 'linear')
         if mean_model=='template':  # template option sometimes used for specific testing
+            self.template_fsigma8 = velocity_pdf['mean'].get('template_fsigma8')
+            if not self.template_fsigma8:
+                raise InputError('When using template model for the mean of the velocity pdf, a value for template_fsigma8 must be provided')
+            self.z_sim = velocity_pdf['mean'].get('z_sim', self.z_eff)
+            self.template_hubble_ratio = velocity_pdf['mean'].get('template_hubble_ratio', 1)
             template_keys = np.atleast_1d(velocity_pdf['mean'].get('template_keys'))
             if not len(template_keys) == 2:
                 raise InputError(f'{len(template_keys)} velocity mean template keys provided, require 2')
