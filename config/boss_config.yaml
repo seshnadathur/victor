@@ -72,6 +72,9 @@ model:
       # if a template shape is provided it can be anisotropic, ie sigma_v = sigma_v(r, mu)
       # template keys are required to identify (in order) r, mu (optional) and sigma_v information in the file
       template_keys: ['rsv', 'sigmav']
+    # choice of whether to apply an isotropic AP rescaling to velocity templates, 
+    # or rescale them with an independent rescaling parameter astar
+    rescale_templates_independent_of_AP: false
 # ---------------------------------------------------- #
 
 # ----- Block providing data and fitting options ----- #
