@@ -69,6 +69,12 @@ class CCFModel:
 
         self._load_realspace_ccf(model['realspace_ccf'], input_data)
         self.matter_model = model['matter_ccf'].get('model', 'linear_bias')
+        self.realspace_ccf_from_data = model['realspace_ccf'].get('from_data', False)
+        if self.matter_model == 'linear_bias' and not self.realspace_ccf_from_data:
+            # when supplying a template real-space ccf we still assume the same scaling as for the template model
+            self.template_sigma8 = model['matter_ccf'].get('template_sigma8', None)
+            if not self.template_sigma8:
+                raise InputError('When using linear bias for the matter ccf and the real-space ccf is from a template, template_sigma8 must be provided')
         if self.matter_model == 'template':
             self._set_matter_ccf_template(model['matter_ccf'], input_data)
         self._set_velocity_pdf(model['velocity_pdf'], input_data)
@@ -80,6 +86,7 @@ class CCFModel:
                       'kaiser_approximation': model.get('kaiser_approximation', False),
                       'kaiser_coord_shift': model.get('kaiser_coord_shift', True),
                       'assume_isotropic': model['realspace_ccf'].get('assume_isotropic', True),
+                      'realspace_ccf_from_data': self.realspace_ccf_from_data,
                       'matter_model': self.matter_model,
                       'excursion_set_options': model['matter_ccf'].get('excursion_set_options', {}),
                       'bias': model['matter_ccf'].get('bias', 1.9),
@@ -217,6 +224,11 @@ class CCFModel:
         # model of the mean of the velocity pdf
         mean_model = velocity_pdf['mean'].get('model', 'linear')
         if mean_model=='template':  # template option sometimes used for specific testing
+            self.template_fsigma8 = velocity_pdf['mean'].get('template_fsigma8')
+            if not self.template_fsigma8:
+                raise InputError('When using template model for the mean of the velocity pdf, a value for template_fsigma8 must be provided')
+            self.z_sim = velocity_pdf['mean'].get('z_sim', self.z_eff)
+            self.template_hubble_ratio = velocity_pdf['mean'].get('template_hubble_ratio', 1)
             template_keys = np.atleast_1d(velocity_pdf['mean'].get('template_keys'))
             if not len(template_keys) == 2:
                 raise InputError(f'{len(template_keys)} velocity mean template keys provided, require 2')
@@ -397,6 +409,14 @@ class CCFModel:
         for key, value in kwargs.items():
             model[key] = value  # override defaults
 
+        # extract the value of apar
+        if 'epsilon' in params:
+            apar = params.get('alpha', 1) * params['epsilon']**(-2/3)
+        else:
+            apar = params.get('apar', 1)
+        # get the true Hubble value from the fiducial one by using apar
+        iaH_true = self.iaH * apar  # [remember iaH = 1/(aH)]
+        
         delta_r, integrated_delta_r = self.delta_profiles(r, params, **kwargs)
         delta = _spline(r, delta_r, ext=3)
         int_delta = _spline(r, integrated_delta_r, ext=3)
@@ -405,27 +425,35 @@ class CCFModel:
         if model['matter_model'] == 'linear_bias':
             # here we want to multiply by growth rate f alone, since there is a 1/b factor already included
             # in delta and int_delta; we obtain this as beta*b (so that bias values cancel out)
-            growth_term = params['beta'] * params.get('bias', model['bias'])
+            if model['realspace_ccf_from_data']:
+                growth_term = params['beta'] * params.get('bias', model['bias'])
+            else:
+                growth_term = params['fsigma8'] / self.template_sigma8
         if model['matter_model'] == 'template':
             # here we want to rescale the template by sigma8 / sigma8_template as well as multiply by f
             growth_term = params['fsigma8'] / self.template_sigma8
         if model['matter_model'] == 'excursion_set':
             # just multiply by f alone
             growth_term = params['f']
+        if model['mean_model'] == 'template':
+            # we want to rescale the template by the ratio of aH in the model to that in the template cosmology,
+            # as well as by the ratio of fsigma_8 in the model to that in the template cosmology
+            redshift_shift = (1 + self.z_sim) / (1 + self.z_eff)
+            growth_term = (params['fsigma8'] / self.template_fsigma8) * self.template_hubble_ratio * redshift_shift / apar
 
         # now the actual velocity profile calculation
         if model['mean_model'] == 'linear':
             # simplest linearised form of the continuity equation, potentially with an empirical correction
             if not model['empirical_corr']:
-                vr = -growth_term * r * int_delta(r) / (3 * self.iaH)
-                dvr = -growth_term * (delta(r) - 2 * int_delta(r) / 3) / self.iaH
+                vr = -growth_term * r * int_delta(r) / (3 * iaH_true)
+                dvr = -growth_term * (delta(r) - 2 * int_delta(r) / 3) / iaH_true
             else:
                 # add multiplicative empirical correction factor (1 + Av*delta(r))
-                Av = params.get('Av', 0) # defaults to 0 unless sampled/set
-                vr = -growth_term * r * int_delta(r) * (1 + Av * delta(r)) / (3 * self.iaH)
+                Av = params.get('Av', 0) 
+                vr = -growth_term * r * int_delta(r) * (1 + Av * delta(r)) / (3 * iaH_true)
                 # build a finer grid to better estimate derivative numerically
                 rgrid = np.linspace(0.1, self.r.max(), 100)
-                vr_grid = -growth_term * rgrid * int_delta(rgrid) * (1 + Av * delta(rgrid)) / (3 * self.iaH)
+                vr_grid = -growth_term * rgrid * int_delta(rgrid) * (1 + Av * delta(rgrid)) / (3 * iaH_true)
                 dvr_interp = _spline(rgrid, np.gradient(vr_grid, rgrid), ext=3)
                 dvr = dvr_interp(r)
         if model['mean_model'] == 'nonlinear':
@@ -436,28 +464,28 @@ class CCFModel:
                                                                r_max=np.max(r))
             if not model['empirical_corr']:
                 # fully non-linear continuity equation
-                vr = -growth_term * r * logderiv_Delta(r) / (3 * self.iaH * (1 + delta(r)))
+                vr = -growth_term * r * logderiv_Delta(r) / (3 * iaH_true * (1 + delta(r)))
                 # build a finer grid to better estimate derivative numerically
                 rgrid = np.linspace(0.1, self.r.max(), 100)
-                vr_grid = -growth_term * rgrid * logderiv_Delta(rgrid) / (3 * self.iaH * (1 + delta(rgrid)))
+                vr_grid = -growth_term * rgrid * logderiv_Delta(rgrid) / (3 * iaH_true * (1 + delta(rgrid)))
                 dvr_interp = _spline(rgrid, np.gradient(vr_grid, rgrid), ext=3)
                 dvr = dvr_interp(r)
             else:
                 # add multiplicative empirical correction factor (1 + Av*delta(r))
-                Av = params.get('Av', 0) # defaults to 0 unless sampled/set
-                vr = -growth_term * r * logderiv_Delta(r) * (1 + Av * delta(r))/ (3 * self.iaH * (1 + delta(r)))
+                Av = params.get('Av', 0)
+                vr = -growth_term * r * logderiv_Delta(r) * (1 + Av * delta(r))/ (3 * iaH_true * (1 + delta(r)))
                 # build a finer grid to better estimate derivative numerically
                 rgrid = np.linspace(0.1, self.r.max(), 100)
-                vr_grid = -growth_term * rgrid * logderiv_Delta(rgrid) / (3 * self.iaH * (1 + delta(rgrid)))
+                vr_grid = -growth_term * rgrid * logderiv_Delta(rgrid) / (3 * iaH_true * (1 + delta(rgrid)))
                 dvr_interp = _spline(rgrid, np.gradient(vr_grid, rgrid), ext=3)
                 dvr = dvr_interp(r)
         if model['mean_model'] == 'template':
             if not self.has_velocity_template:
                 raise InputError('velocity_terms: Cannot use template option as no template has been supplied.')
-            vr = self.radial_velocity(r)
+            vr = self.radial_velocity(r) * growth_term
             # build a finer grid to better estimate derivative numerically
             rgrid = np.linspace(0.1, self.r.max(), 100)
-            dvr_interp = _spline(rgrid, np.gradient(self.radial_velocity(rgrid), rgrid), ext=3)
+            dvr_interp = _spline(rgrid, np.gradient(self.radial_velocity(rgrid) * growth_term, rgrid), ext=3)
             dvr = dvr_interp(r)
 
         return vr, dvr
@@ -565,6 +593,11 @@ class CCFModel:
             aperp = params.get('aperp', 1)
             apar = params.get('apar', 1)
             epsilon = aperp / apar
+        # rescale the (inverse) Hubble value relative to the fiducial model as well
+        iaH_true = self.iaH * apar
+        # NOTE: in the velocity_terms() module velocities are always computed by multiplying by the true
+        # value of aH in the model, and now we divide all velocity terms by the true value of aH. So there
+        # will eventually be no dependence of the CCF model on apar, though there will be for the raw velocity
 
         # --- rescale real-space functions to account for Alcock-Paczynski dilation --- #
         # rescale templates by some isotropic rescaling factor astar; if not sampling over astar, 
@@ -579,8 +612,11 @@ class CCFModel:
         # real-space correlation
         ccf_mult = self.get_interpolated_real_multipoles(beta)
         real_multipoles  = {}
-        for i, ell in enumerate(self.poles_r):
-            real_multipoles[f'{ell}'] = _spline(rescaled_r, ccf_mult[i], ext=3)
+        for i, ell in enumerate(self.poles_r): 
+            if model['realspace_ccf_from_data']:
+                real_multipoles[f'{ell}'] = _spline(reference_r, ccf_mult[i], ext=3)
+            else:
+                real_multipoles[f'{ell}'] = _spline(rescaled_r, ccf_mult[i], ext=3)
         # velocity terms: note here the little hack to get an estimate at r=0 which helps control an interpolation
         # artifact that affects only the approximate Kaiser and special Euclid calculations (it is also only
         # cosmetic, but this helps produce nicer figures)
@@ -595,14 +631,12 @@ class CCFModel:
         else:
             # rescale as normal
             vr_interp = _spline(np.append([0.01*mu_integral], rescaled_r), vr, ext=3)
-            dvr_interp = _spline(np.append([0.01*mu_integral], rescaled_r), dvr, ext=3)
+            dvr_interp = _spline(np.append([0.01*mu_integral], rescaled_r), dvr/mu_integral, ext=3)
         if model['rsd_model'] in ['streaming', 'dispersion']:
-            # we will rescale the actual dispersion function later, but scale the amplitude with apar here
-            sigma_v = params.get('sigma_v', 380) * apar
+           sigma_v = params.get('sigma_v', 380)
 
         # apply AP corrections to shift input coordinates in the fiducial cosmology to those in true cosmology
         mu_s = Mu
-        mu_s[Mu>0] = 1 / np.sqrt(1 + epsilon**2 * (1 / Mu[Mu>0]**2 - 1))
         s_perp = S * np.sqrt(1 - mu_s**2) * aperp
         s_par = S * mu_s * apar
         s = np.sqrt(s_par**2 + s_perp**2) # note this is no longer same as the input!
@@ -611,7 +645,7 @@ class CCFModel:
 
             v_par = X * sigma_v # range of integration large enough to converge to integral over (-infty, infty)
             if model['rsd_model'] == 'streaming':
-                r_par = s_par - v_par * self.iaH
+                r_par = s_par - v_par * iaH_true
                 r = np.sqrt(s_perp**2 + r_par**2)
                 mu_r = r_par / r
                 # now scale the dispersion function for AP dilation and then evaluate
@@ -621,10 +655,10 @@ class CCFModel:
                 jacobian = 1 # no change in variables
             else:
                 # start by iteratively solving for the mean real-space coordinate
-                r_par = (s_par - v_par * self.iaH) / (1 + self.iaH * vr_interp(s) / s)
+                r_par = (s_par - v_par * iaH_true) / (1 + iaH_true * vr_interp(s) / s)
                 for i in range(model.get('niter', 5)):
                     r = np.sqrt(s_perp**2 + r_par**2)
-                    r_par =  (s_par - v_par * self.iaH) / (1 + self.iaH * vr_interp(r) / r)
+                    r_par =  (s_par - v_par * iaH_true) / (1 + iaH_true * vr_interp(r) / r)
                 r = np.sqrt(s_perp**2 + r_par**2)
                 mu_r = r_par / r
                 # now scale the dispersion function for AP dilation and then evaluate
@@ -632,8 +666,15 @@ class CCFModel:
                 sv = sigma_v * sv_spl.ev(r, mu_r)
                 vel_pdf = norm.pdf(v_par, loc=0, scale=sv)
                 # as we've changed variables account for this in the Jacobian
-                jacobian = 1 / (1 + vr_interp(r)*self.iaH/r + self.iaH * mu_r**2 * (dvr_interp(r) - vr_interp(r)/r))
+                jacobian = 1 / (1 + vr_interp(r)*iaH_true/r + iaH_true * mu_r**2 * (dvr_interp(r) - vr_interp(r)/r))
 
+            # if the real-space CCF comes from the data, not a template, apply inverse AP corrections
+            # to shift coordinates from true cosmology to the fiducial one and evaluate CCF at these adjusted positions
+            if model['realspace_ccf_from_data']:
+               r_par_fid  = r_par/apar
+               r_perp_fid = s_perp/aperp
+               r = np.sqrt(r_par_fid**2  + r_perp_fid**2)
+               mu_r = r_par_fid/r 
             # build the real-space ccf at each point
             if model['assume_isotropic']:
                 # following is equivalent to multiplying by 1, but more explicitly shows what is happening!
@@ -654,10 +695,10 @@ class CCFModel:
 
             if model.get('kaiser_coord_shift', True):
                 # solve iteratively for mean real-space coordinate
-                r_par = s_par / (1 + M * self.iaH * vr_interp(s) / s)
+                r_par = s_par / (1 + M * iaH_true * vr_interp(s) / s)
                 for i in range(model.get('niter', 5)):
                     r = np.sqrt(s_perp**2 + r_par**2)
-                    r_par = s_par / (1 + M * self.iaH * vr_interp(r) / r)
+                    r_par = s_par / (1 + M * iaH_true * vr_interp(r) / r)
             else:
                 # NOTE: this is incorrect! it is included only to allow users to reproduce results in some
                 # previous papers which do not include the coordinate shift!
@@ -665,6 +706,16 @@ class CCFModel:
             r = np.sqrt(s_perp**2 + r_par**2)
             mu_r = r_par / r
 
+            # evaluate velocity terms in the Jacobian with added nuisance parameters M and Q
+            J = M*vr_interp(r)*iaH_true/r + M*Q*mu_r**2*iaH_true*(dvr_interp(r) - vr_interp(r)/r)
+
+            # if the real-space CCF comes from the data, not a template, apply inverse AP corrections
+            # to shift coordinates from true cosmology to the fiducial one and evaluate CCF at these adjusted positions
+            if model['realspace_ccf_from_data']:
+               r_par_fid  = r_par/apar
+               r_perp_fid = s_perp/aperp
+               r = np.sqrt(r_par_fid**2  + r_perp_fid**2)
+               mu_r = r_par_fid/r 
             # build the real-space ccf at each point
             if model['assume_isotropic']:
                 xi_rmu =  real_multipoles['0'](r) * legendre(0)(mu_r)
@@ -676,12 +727,13 @@ class CCFModel:
             # we now obtain the model without integration (ie assuming the velocity pdf is a delta function)
             if not model.get('kaiser_approximation', False):
                 # use full expression for Jacobian but with added nuisance parameters M and Q
-                jacobian = 1 / (1 + M*vr_interp(r)*self.iaH/r + M*Q*mu_r**2*self.iaH*(dvr_interp(r) - vr_interp(r)/r))
+                jacobian = 1 / (1 + J)
                 xi_smu = (1 + M * xi_rmu) * jacobian - 1
             else:
                 # approximate Jacobian by a series expansion truncated at linear order in velocity terms (note the nuisance
                 # parameters M and Q as well) and also truncate expression for xi_smu to same order
-                xi_smu = M * (xi_rmu - vr_interp(r)*self.iaH/r - Q*mu_r**2*self.iaH*(dvr_interp(r) - vr_interp(r)/r))
+                jacobian = -J
+                xi_smu = M * xi_rmu + jacobian
 
             # drop the unnecessary dimension
             xi_smu = xi_smu[:, :, 0]
@@ -694,10 +746,10 @@ class CCFModel:
 
             if model.get('kaiser_coord_shift', True):
                 # solve iteratively for mean real-space coordinate
-                r_par = s_par / (1 + M * self.iaH * vr_interp(s) / s)
+                r_par = s_par / (1 + M * iaH_true * vr_interp(s) / s)
                 for i in range(model.get('niter', 5)):
                     r = np.sqrt(s_perp**2 + r_par**2)
-                    r_par = s_par / (1 + M * self.iaH * vr_interp(r) / r)
+                    r_par = s_par / (1 + M * iaH_true * vr_interp(r) / r)
             else:
                 # NOTE: this is incorrect! it is included only to allow users to reproduce results in some
                 # previous papers which do not include the coordinate shift!
@@ -705,6 +757,16 @@ class CCFModel:
             r = np.sqrt(s_perp**2 + r_par**2)
             mu_r = r_par / r
 
+            # NOTE: the new factors of 3 and 2 on the first and second terms respectively!
+            J = 3*M*vr_interp(r)*iaH_true/r + 2*M*Q*mu_r**2*iaH_true*(dvr_interp(r) - vr_interp(r)/r)
+
+            # if the real-space CCF comes from the data, not a template, apply inverse AP corrections
+            # to shift coordinates from true cosmology to the fiducial one and evaluate CCF at these adjusted positions
+            if model['realspace_ccf_from_data']:
+               r_par_fid  = r_par/apar
+               r_perp_fid = s_perp/aperp
+               r = np.sqrt(r_par_fid**2  + r_perp_fid**2)
+               mu_r = r_par_fid/r 
             # build the real-space ccf at each point
             if model['assume_isotropic']:
                 xi_rmu =  real_multipoles['0'](r) * legendre(0)(mu_r)
@@ -714,8 +776,7 @@ class CCFModel:
                     xi_rmu = xi_rmu + real_multipoles[f'{ell}'](r) * legendre(ell)(mu_r)
 
             # we now obtain the model without integration (ie assuming the velocity pdf is a delta function)
-            # NOTE: the new factors of 3 and 2 on the second and third terms respectively!
-            xi_smu = M * (xi_rmu - 3*vr_interp(r)*self.iaH/r - 2*Q*mu_r**2*self.iaH*(dvr_interp(r) - vr_interp(r)/r))
+            xi_smu = M * xi_rmu - J
 
             # drop the unnecessary dimension
             xi_smu = xi_smu[:, :, 0]
