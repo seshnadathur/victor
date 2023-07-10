@@ -93,6 +93,7 @@ class CCFModel:
                       'mean_model': model['velocity_pdf']['mean'].get('model', 'linear'),
                       'pdf_form': model['velocity_pdf'].get('form', 'gaussian'),
                       'empirical_corr': model['velocity_pdf']['mean'].get('empirical_corr', False),
+                      'velocity_independent_of_AP': model['velocity_pdf'].get('rescale_templates_independent_of_AP', True),
                      }
 
     def _load_realspace_ccf(self, realspace_ccf, input_data):
@@ -600,15 +601,16 @@ class CCFModel:
         # will eventually be no dependence of the CCF model on apar, though there will be for the raw velocity
 
         # --- rescale real-space functions to account for Alcock-Paczynski dilation --- #
-        # rescale templates by some isotropic rescaling factor astar; if not sampling over astar, 
-        # use the AP parameters to determine the rescaling factor 
-        if params.get('astar', -1) < 0:
+        # rescale templates with an isotropic rescaling factor astar independent of AP
+        # otherwise, use the AP parameters to determine the rescaling factor 
+        if model['velocity_independent_of_AP']: 
+            rescaling_factor = params.get('astar', 1)
+        else: 
             mu_vals = np.linspace(1e-10, 1)
             mu_integral = np.trapz(apar * np.sqrt(1 + (1 - mu_vals**2) * (epsilon**2 - 1)), mu_vals)
-        else: 
-            mu_integral = params['astar']
+            rescaling_factor = mu_integral
         reference_r = self.r
-        rescaled_r = reference_r * mu_integral
+        rescaled_r = reference_r * rescaling_factor
         # real-space correlation
         ccf_mult = self.get_interpolated_real_multipoles(beta)
         real_multipoles  = {}
@@ -630,8 +632,8 @@ class CCFModel:
             dvr_interp = _spline(np.append([0.01], reference_r), dvr, ext=3)
         else:
             # rescale as normal
-            vr_interp = _spline(np.append([0.01*mu_integral], rescaled_r), vr, ext=3)
-            dvr_interp = _spline(np.append([0.01*mu_integral], rescaled_r), dvr/mu_integral, ext=3)
+            vr_interp = _spline(np.append([0.01*rescaling_factor], rescaled_r), vr, ext=3)
+            dvr_interp = _spline(np.append([0.01*rescaling_factor], rescaled_r), dvr/rescaling_factor, ext=3)
         if model['rsd_model'] in ['streaming', 'dispersion']:
            sigma_v = params.get('sigma_v', 380)
 
@@ -649,7 +651,7 @@ class CCFModel:
                 r = np.sqrt(s_perp**2 + r_par**2)
                 mu_r = r_par / r
                 # now scale the dispersion function for AP dilation and then evaluate
-                sv_spl = si.RectBivariateSpline(self.r_for_sv * mu_integral, self.mu_for_sv, self.sv_rmu.T)
+                sv_spl = si.RectBivariateSpline(self.r_for_sv * rescaling_factor, self.mu_for_sv, self.sv_rmu.T)
                 sv = sigma_v * sv_spl.ev(r, mu_r)
                 vel_pdf = norm.pdf(v_par, loc=vr_interp(r) * mu_r, scale=sv)
                 jacobian = 1 # no change in variables
@@ -662,7 +664,7 @@ class CCFModel:
                 r = np.sqrt(s_perp**2 + r_par**2)
                 mu_r = r_par / r
                 # now scale the dispersion function for AP dilation and then evaluate
-                sv_spl = si.RectBivariateSpline(self.r_for_sv * mu_integral, self.mu_for_sv, self.sv_rmu.T)
+                sv_spl = si.RectBivariateSpline(self.r_for_sv * rescaling_factor, self.mu_for_sv, self.sv_rmu.T)
                 sv = sigma_v * sv_spl.ev(r, mu_r)
                 vel_pdf = norm.pdf(v_par, loc=0, scale=sv)
                 # as we've changed variables account for this in the Jacobian
