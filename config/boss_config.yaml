@@ -74,7 +74,7 @@ model:
       template_keys: ['rsv', 'sigmav']
     # choice of whether to apply an isotropic AP rescaling to velocity templates, 
     # or rescale them with an independent rescaling parameter astar
-    rescale_templates_independent_of_AP: false
+    rescale_templates_independent_of_AP: False
 # ---------------------------------------------------- #
 
 # ----- Block providing data and fitting options ----- #
