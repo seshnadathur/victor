@@ -51,6 +51,15 @@ model:
       # 'nonlinear' is only allowed when excursion set model is used for the matter ccf
       # 'template' ignores matter ccf settings to use a template velocity profile read from file
       model: linear
+      # if using the 'template' model option, specify (a) the value of f*sigma_8(z_sim) for the
+      # simulation and redshift snapshot used to calibrate the velocity template ...
+      template_fsigma8: 0.45
+      # ... (b) the redshift z_sim of the simulation snapshot use for calibration (optional, defaults to 
+      # the effective redshift z_eff above if not specified) ...
+      z_sim: 
+      # ... and (c) the ratio H_fiducial(z_eff)/H_sim(z_sim) of the Hubble rates in the fiducial
+      # cosmology and the simulation used for calibration (optional, defaults to 1)
+      template_hubble_ratio: 
       # whether to allow additional correction parameter on top this mean model (default False)
       empirical_corr: False
       # --- template info (ignored if not using template for mean) --- #
@@ -63,6 +72,9 @@ model:
       # if a template shape is provided it can be anisotropic, ie sigma_v = sigma_v(r, mu)
       # template keys are required to identify (in order) r, mu (optional) and sigma_v information in the file
       template_keys: ['rsv', 'sigmav']
+    # choice of whether to apply an isotropic AP rescaling to velocity templates, 
+    # or rescale them with an independent rescaling parameter astar
+    rescale_templates_independent_of_AP: false
 # ---------------------------------------------------- #
 
 # ----- Block providing data and fitting options ----- #
