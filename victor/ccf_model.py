@@ -632,8 +632,8 @@ class CCFModel:
             dvr_interp = _spline(np.append([0.01], reference_r), dvr, ext=3)
         else:
             # rescale as normal
-            vr_interp = _spline(np.append([0.01*rescaling_factor], rescaled_r), vr, ext=3)
-            dvr_interp = _spline(np.append([0.01*rescaling_factor], rescaled_r), dvr/rescaling_factor, ext=3)
+            vr_interp = _spline(np.append([0.01*rescaling_factor], rescaled_r), vr*rescaling_factor, ext=3)
+            dvr_interp = _spline(np.append([0.01*rescaling_factor], rescaled_r), dvr, ext=3)
         if model['rsd_model'] in ['streaming', 'dispersion']:
            sigma_v = params.get('sigma_v', 380)
 

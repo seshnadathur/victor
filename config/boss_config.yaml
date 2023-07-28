@@ -25,6 +25,8 @@ model:
     ccf_keys: ['r', 'monopole', 'quadrupole']
     # whether to use ccf monopole only (i.e., assume real-space ccf is isotropic) (default False)
     assume_isotropic: True
+    # wether the ccf comes from a template or data
+    from_data: False
   # how to calculate the cross-correlation with matter entering in the model
   matter_ccf:
     # model to use for the matter ccf: options are 'template', 'linear_bias' or 'excursion_set'
