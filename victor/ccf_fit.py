@@ -153,10 +153,18 @@ class CCFFit(CCFModel):
         # sense check the data
         if self.fixed_covmat:
             if not (covmat.shape == ((len(self.s) * len(self.poles_s), len(self.s) * len(self.poles_s)))):
-                raise InputError('Unexpected shape of (fixed) covariance matrix')
+                try:
+                    covmat = covmat[:len(self.s) * len(self.poles_s), :len(self.s) * len(self.poles_s)]
+                    print('Warning, (fixed) covariance matrix was cut down to match the number of selected multipoles')
+                except:
+                    raise InputError('Unexpected shape of (fixed) covariance matrix')
         else:
             if not (covmat.shape == ((len(self.beta_covmat), len(self.s) * len(self.poles_s), len(self.s) * len(self.poles_s)))):
-                raise InputError('Unexpected shape of (beta-varying) covariance matrix')
+                try:
+                    covmat = covmat[:, :len(self.s) * len(self.poles_s), :len(self.s) * len(self.poles_s)]
+                    print('Warning, (beta-varying) covariance matrix was cut down to match the number of selected multipoles')
+                except:
+                    raise InputError('Unexpected shape of (beta-varying) covariance matrix')
 
         self.covmat = covmat
         self.icov = np.linalg.inv(self.covmat)
